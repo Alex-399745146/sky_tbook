@@ -1,0 +1,63 @@
+[project]
+name = "sky-tbook"
+version = "0.1.0"
+description = "online learning"
+authors = [
+    {name = "Alexsandr Bachevskiy",email = "bachevskiiaa@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django (==4.2)",
+    "psycopg2-binary (>=2.9.12,<3.0.0)",
+    "pillow (>=12.3.0,<13.0.0)",
+    "djangorestframework (>=3.17.1,<4.0.0)",
+    "django-email-users (>=2.1.0,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "sky_tbook", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "mypy (>=2.1.0,<3.0.0)",
+    "flake8 (>=7.3.0,<8.0.0)",
+    "isort (>=8.0.1,<9.0.0)",
+    "black (>=26.5.1,<27.0.0)"
+]
+
+[tool.mypy]
+#ignore_errors = true  # Для учебного проекта можно вкл. пропуска ошибок.
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "sky_tbook.settings"
+
+[[tool.mypy.overrides]]
+module = "django.*"
+ignore_missing_imports = false
+
+[tool.black]
+line-length = 119
+exclude = '''
+(
+  /(
+      \.eggs
+    | \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | dist
+  )/
+  | foo.py
+
+)
+'''
+
+[tool.isort]
+line_length = 119
