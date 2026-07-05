@@ -1,23 +1,34 @@
-"""
-URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("app_materials/", include("app_materials.urls")),
+    path("app_users/", include("app_users.urls")),
 ]
+
+# Для справки:
+
+# ViewSet
+# GET http://127.0.0.1:8000/app_materials/courses/ — список курсов.
+#
+# POST http://127.0.0.1:8000/app_materials/courses/ — создание курса.
+#
+# GET http://127.0.0.1:8000/app_materials/courses/{id}/ — один курс.
+#
+# PUT http://127.0.0.1:8000/app_materials/courses/{id}/ — полное обновление.
+#
+# PATCH http://127.0.0.1:8000/app_materials/courses/{id}/ — частичное обновление.
+#
+# DELETE http://127.0.0.1:8000/app_materials/courses/{id}/ — удаление курса.
+#
+# Generics
+# GET http://127.0.0.1:8000/app_materials/lessons/ — список уроков.
+#
+# POST http://127.0.0.1:8000/app_materials/lessons/create/ — создание урока.
+#
+# GET http://127.0.0.1:8000/app_materials/lessons/{id}/ — один урок.
+#
+# PUT http://127.0.0.1:8000/app_materials/lessons/{id}/update/ — обновление урока.
+#
+# DELETE http://127.0.0.1:8000/app_materials/lessons/{id}/delete/ — удаление урока.

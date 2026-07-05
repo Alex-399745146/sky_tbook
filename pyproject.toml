@@ -25,18 +25,23 @@ build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = [
-    "mypy (>=2.1.0,<3.0.0)",
+    "mypy (==1.10.1)",
     "flake8 (>=7.3.0,<8.0.0)",
     "isort (>=8.0.1,<9.0.0)",
-    "black (>=26.5.1,<27.0.0)"
+    "black (>=26.5.1,<27.0.0)",
+    "django-stubs (>=6.0.6,<7.0.0)",
+    "djangorestframework-stubs (>=3.17.0,<4.0.0)"
 ]
 
 [tool.mypy]
-#ignore_errors = true  # Для учебного проекта можно вкл. пропуска ошибок.
-plugins = ["mypy_django_plugin.main"]
+ignore_errors = true  # Для учебного проекта можно вкл. пропуска ошибок.
+plugins = [
+    "mypy_django_plugin.main",
+    "mypy_drf_plugin.main",
+]
 
 [tool.django-stubs]
-django_settings_module = "sky_tbook.settings"
+django_settings_module = "config.settings"
 
 [[tool.mypy.overrides]]
 module = "django.*"
