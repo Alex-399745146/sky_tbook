@@ -32,10 +32,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",  # если нужен blacklist
-
     "app_users",
     "app_materials",
-
 ]
 
 
