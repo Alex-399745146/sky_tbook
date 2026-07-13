@@ -1,7 +1,8 @@
 # app_users/serializers.py
 
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
 from .models import Payment
 
 User = get_user_model()
@@ -54,6 +55,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             phone=validated_data.get("phone", ""),
             city=validated_data.get("city", ""),
         )
-        user.set_password(validated_data['password'])
+        user.set_password(validated_data["password"])
         user.save()
         return user

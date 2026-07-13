@@ -1,11 +1,12 @@
 # app_materials/views.py
 
 from rest_framework import generics, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from app_users.permissions import IsModer, IsOwner
 
 from .models import Course, Lesson
 from .serializers import CourseSerializer, LessonSerializer
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from app_users.permissions import IsModer, IsOwner
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -25,16 +26,16 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         # По умолчанию только авторизованные.
-        if self.action in ['list', 'retrieve']:
+        if self.action in ["list", "retrieve"]:
             # Просмотр: авторизованные или модератор, или владелец.
             permission_classes = [IsAuthenticated, IsModer | IsOwner]
-        elif self.action in ['update', 'partial_update']:
+        elif self.action in ["update", "partial_update"]:
             # Редактировать: модераторы (любые объекты) или владельцы.
             permission_classes = [IsAuthenticated, IsModer | IsOwner]
-        elif self.action == 'destroy':
+        elif self.action == "destroy":
             # Удалять: только владельцы, модераторы НЕ могут удалять.
             permission_classes = [IsAuthenticated, IsOwner & ~IsModer]
-        elif self.action == 'create':
+        elif self.action == "create":
             # Создание курса: авторизованные НЕ‑модераторы (модератор не может создавать).
             permission_classes = [IsAuthenticated, ~IsModer]
         else:

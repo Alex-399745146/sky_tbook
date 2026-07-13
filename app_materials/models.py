@@ -1,7 +1,7 @@
 # app_materials/models.py
 
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class Course(models.Model):
@@ -11,8 +11,8 @@ class Course(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='owned_courses',
-        verbose_name='Владелец курса',
+        related_name="owned_courses",
+        verbose_name="Владелец курса",
         null=True,  # временно, потом можно сделать обязательным
         blank=True,
     )
@@ -35,8 +35,8 @@ class Lesson(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='owned_lessons',
-        verbose_name='Владелец урока',
+        related_name="owned_lessons",
+        verbose_name="Владелец урока",
         null=True,
         blank=True,
     )
