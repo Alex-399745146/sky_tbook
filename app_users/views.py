@@ -6,6 +6,13 @@ from rest_framework.generics import ListAPIView
 
 from .models import Payment
 from .serializers import PaymentSerializer
+from rest_framework import generics, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import get_user_model
+
+from .serializers import UserSerializer, UserRegisterSerializer
+
+User = get_user_model()
 
 
 class PaymentListAPIView(ListAPIView):
@@ -25,3 +32,21 @@ class PaymentListAPIView(ListAPIView):
     ordering_fields = ['payment_date', 'amount']
     # Дефолт — новые сверху.
     ordering = ['-payment_date']
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    Полный CRUD для пользователей.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    # Для Task 3 мы позже добавим IsOwner/ограничения по объектам.
+
+
+class UserRegisterAPIView(generics.CreateAPIView):
+    """
+    Регистрация пользователя.
+    """
+    serializer_class = UserRegisterSerializer
+    permission_classes = [AllowAny]
