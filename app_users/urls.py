@@ -2,11 +2,10 @@
 
 from django.urls import path
 
-from . import views
+from .views import PaymentListAPIView
 
 app_name = "app_users"
 
 urlpatterns = [
-    # временная заглушка, чтобы всё работало
-    path("", views.index, name="index"),
+    path("payments/", PaymentListAPIView.as_view(), name="payments-list"),
 ]
