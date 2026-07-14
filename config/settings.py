@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -43,7 +44,6 @@ REST_FRAMEWORK: dict[str, Any] = {
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     # В фоновом режиме закрываем весь доступ только для авторизованных.
     # Для регистрации/логина и получения токенов потом явно ставим AllowAny.
@@ -53,6 +53,12 @@ REST_FRAMEWORK: dict[str, Any] = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+}
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
 
