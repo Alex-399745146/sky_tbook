@@ -34,7 +34,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated, IsModer | IsOwner]
         elif self.action == "destroy":
             # Удалять: только владельцы, модераторы НЕ могут удалять.
-            permission_classes = [IsAuthenticated, IsOwner & ~IsModer]
+            permission_classes = [IsAuthenticated, IsOwner | IsModer]
         elif self.action == "create":
             # Создание курса: авторизованные НЕ‑модераторы (модератор не может создавать).
             permission_classes = [IsAuthenticated, ~IsModer]

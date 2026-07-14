@@ -17,8 +17,8 @@ class CustomUserAdmin(UserAdmin):
     """
 
     # Поля, которые показываем в списке пользователей
-    list_display = ("email", "phone", "city", "is_staff", "is_active")
-    search_fields = ("email", "phone", "city")
+    list_display = ("id", "email", "phone", "city", "is_staff", "is_active")
+    search_fields = ("id", "email", "phone", "city")
 
     # Указываем, что поле логина — email
     ordering = ("email",)
