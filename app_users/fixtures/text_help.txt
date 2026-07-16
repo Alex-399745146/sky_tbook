@@ -1,0 +1,5 @@
+Команда для создание группы через фикстуру groups.json:
+poetry run python manage.py loaddata groups
+
+Фикстуры можно снять командой, например:
+python manage.py loaddata auth.group --indent 2 > app_users/fixtures/groups.json
