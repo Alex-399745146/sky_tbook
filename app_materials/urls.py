@@ -4,13 +4,13 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    CourseSubscriptionToggleView,
     CourseViewSet,
     LessonCreateAPIView,
     LessonDestroyAPIView,
     LessonListAPIView,
     LessonRetrieveAPIView,
     LessonUpdateAPIView,
-    CourseSubscriptionToggleView,
 )
 
 app_name = "app_materials"
@@ -26,9 +26,9 @@ urlpatterns = [
     path("lessons/<int:pk>/update/", LessonUpdateAPIView.as_view(), name="lesson-update"),
     path("lessons/<int:pk>/delete/", LessonDestroyAPIView.as_view(), name="lesson-delete"),
     path(
-      "courses/subscription-toggle/",
-      CourseSubscriptionToggleView.as_view(),
-      name="course-subscription-toggle",
+        "courses/subscription-toggle/",
+        CourseSubscriptionToggleView.as_view(),
+        name="course-subscription-toggle",
     ),
 ] + router.urls
 
