@@ -1,11 +1,14 @@
 # app_materials/views.py
 
+from rest_framework.views import APIView
 from rest_framework import generics, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
 from app_users.permissions import IsModer, IsOwner
 
-from .models import Course, Lesson
+from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer
 
 
@@ -109,3 +112,35 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticated, IsOwner & ~IsModer]
+
+
+class CourseSubscriptionToggleView(APIView):
+    """
+    Эндпоинт для установки/снятия подписки на курс текущего пользователя.
+    POST:
+      - если подписка есть → удалить, message="подписка удалена"
+      - если подписки нет → создать, message="подписка добавлена"
+    """
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        course_id = request.data.get("course_id")
+
+        if not course_id:
+            return Response(
+                {"message": "Не указан идентификатор курса (course_id)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        course_item = get_object_or_404(Course, pk=course_id)
+
+        subs_qs = Subscription.objects.filter(user=user, course=course_item)
+
+        if subs_qs.exists():
+            subs_qs.delete()
+            message = "подписка удалена"
+        else:
+            Subscription.objects.create(user=user, course=course_item)
+            message = "подписка добавлена"
+
+        return Response({"message": message}, status=status.HTTP_200_OK)
