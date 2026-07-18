@@ -1,13 +1,12 @@
 # app_materials/validators.py
 
 from urllib.parse import urlparse
-from rest_framework import serializers
 
+from rest_framework import serializers
 
 WHITE_LIST_DOMAINS = (
     "youtube.com",
     "www.youtube.com",
-
     "rutube.ru",
     "www.rutube.ru",
 )
