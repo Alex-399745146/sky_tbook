@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from app_users.permissions import IsModer, IsOwner
-
+from .paginators import CourseLessonPagination
 from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer
 
@@ -23,6 +23,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    pagination_class = CourseLessonPagination
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -58,6 +59,7 @@ class LessonListAPIView(generics.ListAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticated, IsModer | IsOwner]
+    pagination_class = CourseLessonPagination
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
