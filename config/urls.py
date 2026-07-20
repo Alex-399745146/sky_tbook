@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from app_materials.views import CourseSubscriptionToggleView
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("app_materials/", include("app_materials.urls")),
@@ -9,6 +11,11 @@ urlpatterns = [
     # Эндпоинты для access/refresh и их обновления.
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path(
+        "course-subscription-toggle-simple/",
+        CourseSubscriptionToggleView.as_view(),
+        name="course-subscription-toggle-simple",
+    ),
 ]
 
 # Для справки:
