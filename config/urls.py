@@ -12,9 +12,9 @@ urlpatterns = [
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(
-        "course-subscription-toggle-simple/",
+        "course/<int:course_id>/subscribe/",
         CourseSubscriptionToggleView.as_view(),
-        name="course-subscription-toggle-simple",
+        name="course-subscription",
     ),
 ]
 
