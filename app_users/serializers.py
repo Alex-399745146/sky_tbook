@@ -46,6 +46,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "avatar",
             "phone",
             "city",
+            "password",
         )
 
     def create(self, validated_data):
