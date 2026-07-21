@@ -11,6 +11,13 @@ from app_users.permissions import IsModer, IsOwner
 from .models import Course, Lesson, Subscription
 from .paginators import CourseLessonPagination
 from .serializers import CourseSerializer, LessonSerializer
+from drf_spectacular.utils import extend_schema
+from .serializers import (
+    CourseSerializer,
+    LessonSerializer,
+    CourseSubscriptionToggleRequestSerializer,
+    CourseSubscriptionToggleResponseSerializer,
+)
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -117,6 +124,10 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwner & ~IsModer]
 
 
+@extend_schema(
+    request=CourseSubscriptionToggleRequestSerializer,
+    responses={200: CourseSubscriptionToggleResponseSerializer},
+)
 class CourseSubscriptionToggleView(APIView):
     """
     Эндпоинт для установки/снятия подписки на курс текущего пользователя.
