@@ -59,3 +59,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data["password"])
         user.save()
         return user
+
+
+class CreatePaymentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Payment
+        fields = (
+            "paid_course",
+            "paid_lesson",
+            "amount",
+            "payment_method",
+        )
