@@ -103,10 +103,12 @@ class User(AbstractUser):
 class Payment(models.Model):
     CASH = "cash"
     TRANSFER = "transfer"
+    STRIPE = "stripe"
 
     PAYMENT_METHOD_CHOICES = [
         (CASH, "Наличные"),
         (TRANSFER, "Перевод на счет"),
+        (STRIPE, "Stripe"),
     ]
 
     user = models.ForeignKey(
@@ -118,7 +120,7 @@ class Payment(models.Model):
 
     paid_course = models.ForeignKey(
         Course,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="course_payments",
@@ -127,7 +129,7 @@ class Payment(models.Model):
 
     paid_lesson = models.ForeignKey(
         Lesson,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="lesson_payments",
@@ -149,6 +151,31 @@ class Payment(models.Model):
         max_length=20,
         choices=PAYMENT_METHOD_CHOICES,
         verbose_name="способ оплаты",
+    )
+
+    # Stripe-поля
+    stripe_product_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Stripe Product ID",
+    )
+    stripe_price_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Stripe Price ID",
+    )
+    stripe_session_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Stripe Session ID",
+    )
+    payment_url = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name="Ссылка на оплату",
     )
 
     class Meta:
