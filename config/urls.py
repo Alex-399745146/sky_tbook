@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 from django.urls import include, path
+from .views import DocsIndexView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -13,6 +14,7 @@ from app_materials.views import CourseSubscriptionToggleView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", DocsIndexView.as_view(), name="docs-index"),
 
     # Модули/приложения.
     path("app_materials/", include("app_materials.urls")),
