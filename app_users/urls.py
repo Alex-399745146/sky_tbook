@@ -15,8 +15,6 @@ router.register("users", UserViewSet, basename="users")
 urlpatterns = [
     path("payments/", PaymentListAPIView.as_view(), name="payments-list"),
     path("payments/create/", CreatePaymentView.as_view(), name="payment-create"),
-
     path("users/", include(router.urls)),
     path("users/register/", UserRegisterAPIView.as_view(), name="users-register"),
-
 ]
