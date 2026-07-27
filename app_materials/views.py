@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app_users.permissions import IsModer, IsOwner
-
+from .tasks import send_course_update_email_task
 from .models import Course, Lesson, Subscription
 from .paginators import CourseLessonPagination
 from .serializers import CourseSerializer, LessonSerializer
@@ -54,6 +54,14 @@ class CourseViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated]
 
         return [permission() for permission in permission_classes]
+
+    def perform_update(self, serializer):
+        """
+        Дополнительная логика после успешного обновления курса:
+        запускаем Celery-задачу отправки писем подписчикам.
+        """
+        course = serializer.save()  # Сохраняем курс.
+        send_course_update_email_task.delay(course.id)
 
 
 class LessonListAPIView(generics.ListAPIView):
