@@ -11,6 +11,13 @@ from app_users.permissions import IsModer, IsOwner
 from .models import Course, Lesson, Subscription
 from .paginators import CourseLessonPagination
 from .serializers import CourseSerializer, LessonSerializer
+from drf_spectacular.utils import extend_schema
+from .serializers import (
+    CourseSerializer,
+    LessonSerializer,
+    CourseSubscriptionToggleRequestSerializer,
+    CourseSubscriptionToggleResponseSerializer,
+)
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -117,6 +124,10 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwner & ~IsModer]
 
 
+@extend_schema(
+    request=CourseSubscriptionToggleRequestSerializer,
+    responses={200: CourseSubscriptionToggleResponseSerializer},
+)
 class CourseSubscriptionToggleView(APIView):
     """
     Эндпоинт для установки/снятия подписки на курс текущего пользователя.
@@ -127,17 +138,9 @@ class CourseSubscriptionToggleView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, course_id, *args, **kwargs):
         user = request.user
-        course_id = request.data.get("course_id")
-
-        if not course_id:
-            return Response(
-                {"message": "Не указан идентификатор курса (course_id)."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        course_item = get_object_or_404(Course, pk=course_id)
+        course_item = get_object_or_404(Course, pk=course_id)  # 404 error, если курса нет.
 
         subs_qs = Subscription.objects.filter(user=user, course=course_item)
 
