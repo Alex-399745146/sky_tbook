@@ -1,23 +1,19 @@
 # app_materials/views.py
 
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app_users.permissions import IsModer, IsOwner
-from .tasks import send_course_update_email_task
+
 from .models import Course, Lesson, Subscription
 from .paginators import CourseLessonPagination
-from .serializers import CourseSerializer, LessonSerializer
-from drf_spectacular.utils import extend_schema
-from .serializers import (
-    CourseSerializer,
-    LessonSerializer,
-    CourseSubscriptionToggleRequestSerializer,
-    CourseSubscriptionToggleResponseSerializer,
-)
+from .serializers import (CourseSerializer, CourseSubscriptionToggleRequestSerializer,
+                          CourseSubscriptionToggleResponseSerializer, LessonSerializer)
+from .tasks import send_course_update_email_task
 
 
 class CourseViewSet(viewsets.ModelViewSet):
