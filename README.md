@@ -33,7 +33,7 @@ poetry run python manage.py migrate
 poetry run python manage.py loaddata users/fixtures/groups.json
 poetry run python manage.py createsuperuser
 
-# сервер
+# Сервер
 poetry run python manage.py runserver
 
 # Celery (Windows)
@@ -53,3 +53,15 @@ JWT: POST /api/token/, POST /api/token/refresh/.
 Подписки на курс: эндпоинт toggle‑подписки, рассылка писем при обновлении курса.
 
 Платежи: /app_users/payments/ с фильтрами по курсу/уроку и способу оплаты.
+
+### Периодическая задача (блокировка неактивных пользователей)
+
+- Задача `app_materials.tasks.deactivate_inactive_users_task` отключает пользователей, которые не заходили более месяца (`is_active = False` по полю `last_login`).
+- Расписание создаётся/обновляется командой:
+  ```bash
+  poetry run python manage.py setup_deactivate_inactive_users_task
+  ```
+- Celery Beat запускается:
+  ```bash
+  poetry run celery -A config beat --loglevel=info
+  ```
