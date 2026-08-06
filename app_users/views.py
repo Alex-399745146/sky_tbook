@@ -1,18 +1,17 @@
 # app_users/views.py
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets
+from rest_framework import generics, status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
 from rest_framework.response import Response
 
 from .models import Payment
-from .serializers import PaymentSerializer, UserRegisterSerializer, UserSerializer, CreatePaymentSerializer
-from .services import create_stripe_product, create_stripe_price, create_stripe_checkout_session
+from .serializers import CreatePaymentSerializer, PaymentSerializer, UserRegisterSerializer, UserSerializer
+from .services import create_stripe_checkout_session, create_stripe_price, create_stripe_product
 
 User = get_user_model()
 
@@ -67,6 +66,7 @@ class CreatePaymentView(generics.CreateAPIView):
       "payment_method": "stripe"
     }
     """
+
     serializer_class = CreatePaymentSerializer
 
     def create(self, request, *args, **kwargs):

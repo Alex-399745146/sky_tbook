@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-#API STRIPE
+# API STRIPE
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 
@@ -27,19 +27,23 @@ ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1", "0.0.0.0"]
 
 # Регистрация приложений.
 INSTALLED_APPS = [
+    # Стандартные Django приложения.
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
+    # JWT.
     "django_filters",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",  # если нужен blacklist
     "drf_spectacular",
-
+    # Celery/Redis.
+    "django_celery_results",
+    "django_celery_beat",
+    # Мои приложения.
     "app_users",
     "app_materials",
 ]
@@ -60,7 +64,6 @@ REST_FRAMEWORK: dict[str, Any] = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
-
     # Схему документации генерим через drf-spectacular.
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -140,9 +143,7 @@ LANGUAGE_CODE = "ru-RU"
 TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
-
 USE_L10N = False
-
 USE_TZ = True
 
 
@@ -164,5 +165,27 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Sky TBook API",
     "DESCRIPTION": "Учебный DRF-проект: курсы, уроки, подписки, оплаты.",
     "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": False, # Активируем сокращённый вывод инфы в документы.
+    "SERVE_INCLUDE_SCHEMA": False,  # Активируем сокращённый вывод инфы в документы.
 }
+
+
+# Настройки Celery/Redis
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+
+CELERY_TIMEZONE = TIME_ZONE  # "Europe/Moscow".
+CELERY_ENABLE_UTC = False  # Работаем в локальном часовом поясе.
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+
+# Настройки email.
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "your_email@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "your_app_password")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

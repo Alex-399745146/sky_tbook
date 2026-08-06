@@ -1,6 +1,7 @@
 # app_materials/views.py
 
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,14 +11,9 @@ from app_users.permissions import IsModer, IsOwner
 
 from .models import Course, Lesson, Subscription
 from .paginators import CourseLessonPagination
-from .serializers import CourseSerializer, LessonSerializer
-from drf_spectacular.utils import extend_schema
-from .serializers import (
-    CourseSerializer,
-    LessonSerializer,
-    CourseSubscriptionToggleRequestSerializer,
-    CourseSubscriptionToggleResponseSerializer,
-)
+from .serializers import (CourseSerializer, CourseSubscriptionToggleRequestSerializer,
+                          CourseSubscriptionToggleResponseSerializer, LessonSerializer)
+from .tasks import send_course_update_email_task
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -54,6 +50,14 @@ class CourseViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated]
 
         return [permission() for permission in permission_classes]
+
+    def perform_update(self, serializer):
+        """
+        Дополнительная логика после успешного обновления курса:
+        запускаем Celery-задачу отправки писем подписчикам.
+        """
+        course = serializer.save()  # Сохраняем курс.
+        send_course_update_email_task.delay(course.id)
 
 
 class LessonListAPIView(generics.ListAPIView):

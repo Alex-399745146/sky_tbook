@@ -1,199 +1,67 @@
-# sky_tbook
+sky_tbook
+Учебный Django‑проект LMS (Learning Management System) с API на Django REST Framework и фоновыми задачами через Celery.
 
-Учебный Django‑проект LMS (Learning Management System) для онлайн‑курсов с API на Django REST Framework.
+Основной функционал
+Курсы и уроки (Course, Lesson) с владельцем (owner) и вложенным списком уроков.
 
-## Описание
+Кастомный пользователь по email, профиль, платежи (Payment).
 
-Проект реализует базовый функционал LMS:
+JWT‑аутентификация (Simple JWT), роли через группу moderators, пермишены IsModer и IsOwner.
 
-- управление курсами и уроками;
-- вложенный вывод уроков внутри курса (количество и список);
-- работа с пользователями и их профилями;
-- учёт платежей за курсы и отдельные уроки;
-- авторизация по JWT‑токенам и разграничение прав доступа (модераторы, владельцы объектов).
+Подписка на обновления курса (Subscription) и рассылка писем подписчикам при обновлении курса (Celery‑задача).
 
-## Технологии
+Периодическая задача через django‑celery‑beat, которая раз в день ищет пользователей с last_login старше месяца и отключает их (is_active = False).
 
-- Python 3.13
-- Django 4.2
-- Django REST Framework 3.17
-- djangorestframework‑simplejwt (JWT‑аутентификация)
-- PostgreSQL
-- Pillow (работа с изображениями)
-- python‑dotenv
+Стек
+Python 3.13, Django 4.2, DRF 3.17
 
-## Структура
+PostgreSQL
 
-Основные приложения:
+Redis (broker/backend для Celery)
 
-- `app_materials` — курсы и уроки (`Course`, `Lesson`, сериализаторы с количеством и списком уроков, API).
-- `app_users` — пользователи (кастомная модель `User` по email, профиль, модель `Payment` для оплат, права доступа и группы).
+Celery, django‑celery‑results, django‑celery‑beat
 
-Главные файлы:
+djangorestframework‑simplejwt, Pillow, python‑dotenv
 
-- `config/settings.py` — настройки проекта, включая `REST_FRAMEWORK` и JWT‑аутентификацию.
-- `config/urls.py` — корневые маршруты и эндпоинты получения/обновления JWT‑токенов.
-- `app_materials/models.py` — модели `Course` и `Lesson` с полем владельца (`owner`).
-- `app_materials/serializers.py` — сериализаторы курсов и уроков (вложенные уроки и `lessons_count`).
-- `app_materials/views.py` — ViewSet для `Course` и Generic‑вью для `Lesson` с разграничением прав по ролям и владельцам.
-- `app_materials/urls.py` — маршруты API курсов и уроков.
-- `app_users/models.py` — кастомный `User` и `Payment`.
-- `app_users/serializers.py` — сериализаторы пользователя и платежей.
-- `app_users/permissions.py` — кастомные пермишены `IsModer` и `IsOwner`.
-- `app_users/urls.py` — маршруты API пользователей (CRUD, регистрация) и платежей.
-- `users/fixtures/groups.json` — фикстура с группами (например, группа модераторов).
-
-## Установка и запуск
-
-```bash
-# клонировать репозиторий
+Установка и запуск
+bash
 git clone https://github.com/Alex-399745146/sky_tbook.git
 cd sky_tbook
 
-# установить зависимости через Poetry
 poetry install
-
-# применить миграции
 poetry run python manage.py migrate
-
-# загрузить группы (например, модераторов)
 poetry run python manage.py loaddata users/fixtures/groups.json
-
-# создать суперпользователя
 poetry run python manage.py createsuperuser
 
-# запустить сервер разработки
+# Сервер
 poetry run python manage.py runserver
-```
 
-После запуска сервер будет доступен по адресу:
+# Celery (Windows)
+poetry run celery -A config worker -P solo --loglevel=info
+poetry run celery -A config beat --loglevel=info
+Redis должен быть запущен локально на redis://127.0.0.1:6379/0.
 
-- `http://127.0.0.1:8000/`
+Кратко по API
+JWT: POST /api/token/, POST /api/token/refresh/.
 
-## Аутентификация и авторизация
+Пользователи: CRUD под /app_users/users/, регистрация /register/.
 
-### JWT‑токены
+Курсы: /app_materials/courses/ (CRUD, вложенные уроки).
 
-Используется библиотека Simple JWT.
+Уроки: /app_materials/lessons/.
 
-Эндпоинты:
+Подписки на курс: эндпоинт toggle‑подписки, рассылка писем при обновлении курса.
 
-- `POST /api/token/` — получить пару `access`/`refresh` токенов.
-- `POST /api/token/refresh/` — обновить `access` токен по действующему `refresh`.
+Платежи: /app_users/payments/ с фильтрами по курсу/уроку и способу оплаты.
 
-Эти эндпоинты доступны без авторизации (`AllowAny`).
+### Периодическая задача (блокировка неактивных пользователей)
 
-Для доступа к защищённым API нужно:
-
-- отправлять заголовок `Authorization: Bearer <access_token>`.
-
-### Пользователи
-
-Эндпоинты (префикс `/app_users/`):
-
-- `POST /app_users/users/register/` — регистрация пользователя (доступен без авторизации).
-- `GET /app_users/users/` — список пользователей (только для авторизованных).
-- `GET /app_users/users/{id}/` — получить пользователя.
-- `PUT/PATCH /app_users/users/{id}/` — обновить пользователя.
-- `DELETE /app_users/users/{id}/` — удалить пользователя.
-
-Все CRUD‑операции по пользователя (кроме регистрации и получения токенов) закрыты авторизацией (`IsAuthenticated`).
-
-### Группы и роли
-
-Используются стандартные группы Django:
-
-- группа `moderators` — модераторы.
-
-Кастомные пермишены:
-
-- `IsModer` — проверяет, что пользователь состоит в группе `moderators`.  
-- `IsOwner` — проверяет, что пользователь является владельцем конкретного объекта (`obj.owner == request.user`).
-
-Группы назначаются пользователям через админ‑панель Django.
-
-## API эндпоинты
-
-### Курсы (Course)
-
-Базовый префикс: `/app_materials/`
-
-- `GET /app_materials/courses/` — список курсов (с количеством уроков и вложенными уроками).
-- `POST /app_materials/courses/` — создание курса.
-- `GET /app_materials/courses/{id}/` — получить курс.
-- `PUT /app_materials/courses/{id}/` — обновить курс.
-- `PATCH /app_materials/courses/{id}/` — частично обновить курс.
-- `DELETE /app_materials/courses/{id}/` — удалить курс.
-
-Права:
-
-- модератор (`moderators`):
-  - может просматривать и редактировать любые курсы;
-  - не может создавать и удалять курсы.
-- обычный авторизованный пользователь:
-  - может просматривать, обновлять и удалять только **свои** курсы (по полю `owner`).
-
-### Уроки (Lesson)
-
-- `GET /app_materials/lessons/` — список уроков.
-- `POST /app_materials/lessons/create/` — создание урока.
-- `GET /app_materials/lessons/{id}/` — получить урок.
-- `PUT /app_materials/lessons/{id}/update/` — обновить урок.
-- `DELETE /app_materials/lessons/{id}/delete/` — удалить урок.
-
-Права:
-
-- модератор:
-  - может просматривать и редактировать любые уроки;
-  - не может создавать и удалять уроки.
-- обычный пользователь:
-  - может просматривать, редактировать и удалять только **свои** уроки (по `owner`).
-
-### Платежи (Payment)
-
-Базовый префикс: `/app_users/`
-
-- `GET /app_users/payments/` — список платежей с фильтрацией и сортировкой:
-  - `?ordering=asc|desc` — порядок по дате оплаты;
-  - `?course={id}` — фильтр по курсу;
-  - `?lesson={id}` — фильтр по уроку;
-  - `?method=cash|transfer` — фильтр по способу оплаты.
-
-Доступ к платежам ограничен авторизованным пользователям; дополнительные ограничения можно накладывать в контроллерах (например, выводить только свои платежи).
-
-## Права доступа (объектный уровень)
-
-Для проверки прав доступа используются:
-
-- глобальные настройки `DEFAULT_AUTHENTICATION_CLASSES` (JWT) и `DEFAULT_PERMISSION_CLASSES` (`IsAuthenticated`) в `settings.py`.
-- кастомные пермишены на уровне контроллеров (ViewSet и Generics) через:
-  - метод `get_permissions()` для ViewSet (разные права для разных `action`);
-  - `permission_classes` для GenericAPIView.
-
-Примеры комбинаций:
-
-- только авторизованные и не‑модераторы:
-  - `permission_classes = [IsAuthenticated, ~IsModer]`
-- авторизованные и либо модераторы, либо владельцы:
-  - `permission_classes = [IsAuthenticated, IsModer | IsOwner]`
-
-## Проверка через Postman
-
-1. Запусти сервер: `poetry run python manage.py runserver`.
-2. Получи JWT‑токены:
-   - `POST /api/token/` с email/паролем.
-3. В запросах к защищённым эндпоинтам используй заголовок:
-   - `Authorization: Bearer <access_token>`.
-4. Проверь:
-   - регистрацию пользователя без токена;
-   - запрет доступа к курсам/урокам без токена;
-   - права модератора (нет создания/удаления, есть просмотр/редактирование);
-   - права обычного пользователя (только свои курсы/уроки).
-
-## Статус
-
-Проект используется для выполнения домашних заданий по Django/DRF с акцентом на:
-
-- JWT‑аутентификацию;
-- разграничение прав доступа по ролям и владельцам;
-- работу с вложенными ресурсами и платежами.
+- Задача `app_materials.tasks.deactivate_inactive_users_task` отключает пользователей, которые не заходили более месяца (`is_active = False` по полю `last_login`).
+- Расписание создаётся/обновляется командой:
+  ```bash
+  poetry run python manage.py setup_deactivate_inactive_users_task
+  ```
+- Celery Beat запускается:
+  ```bash
+  poetry run celery -A config beat --loglevel=info
+  ```
