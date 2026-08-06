@@ -2,31 +2,24 @@
 
 from django.contrib import admin
 from django.urls import include, path
-from .views import DocsIndexView
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularSwaggerView,
-    SpectacularRedocView,
-)
 
 from app_materials.views import CourseSubscriptionToggleView
+
+from .views import DocsIndexView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", DocsIndexView.as_view(), name="docs-index"),
-
     # Модули/приложения.
     path("app_materials/", include("app_materials.urls")),
     path("app_users/", include("app_users.urls")),
-
     # Токены доступа.
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-
     # Подписка/отписка.
     path("course/<int:course_id>/subscribe/", CourseSubscriptionToggleView.as_view(), name="course-subscription"),
-
     # Документация моего API, первичный OpenAPI (JSON/YAML).
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # В оболочке Swagger UI интерфейс.
