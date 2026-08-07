@@ -8,7 +8,7 @@ __pycache__
 *.pyo
 *.pyd
 .coverage
-.env
+.env.local
 .env.docker
 .dockerignore
 .env.example

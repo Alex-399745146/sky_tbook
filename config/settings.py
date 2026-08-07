@@ -5,12 +5,16 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения из файла .env
+# Загружаем переменные окружения из файла .env.local
 load_dotenv(override=True, encoding="utf-8")
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Загружаем .env.local только локально (не в Docker)
+if not os.getenv("DB_HOST"):
+    from dotenv import load_dotenv
+    load_dotenv(override=True, encoding="utf-8")
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
