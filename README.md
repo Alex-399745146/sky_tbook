@@ -1,67 +1,72 @@
-sky_tbook
-Учебный Django‑проект LMS (Learning Management System) с API на Django REST Framework и фоновыми задачами через Celery.
+# Sky TBook API 🚀
 
-Основной функционал
-Курсы и уроки (Course, Lesson) с владельцем (owner) и вложенным списком уроков.
+Учебный DRF-проект: платформа для продажи курсов и уроков с подписками и оплатой через Stripe.
 
-Кастомный пользователь по email, профиль, платежи (Payment).
+## Особенности
 
-JWT‑аутентификация (Simple JWT), роли через группу moderators, пермишены IsModer и IsOwner.
+- ✅ **Django 4.2 + DRF** — REST API с JWT-аутентификацией
+- ✅ **PostgreSQL 16** — надёжная база данных
+- ✅ **Celery + Redis** — фоновые задачи и периодические задачи
+- ✅ **Stripe** — оплата подписок и курсов
+- ✅ **Docker** — полная контейнеризация для разработки и деплоя
+- ✅ **drf-spectacular** — автоматическая документация API
 
-Подписка на обновления курса (Subscription) и рассылка писем подписчикам при обновлении курса (Celery‑задача).
+## Технологии
 
-Периодическая задача через django‑celery‑beat, которая раз в день ищет пользователей с last_login старше месяца и отключает их (is_active = False).
+| Технология | Версия | Назначение |
+|------------|--------|------------|
+| Python | 3.13 | Основной язык |
+| Django | 4.2 | Веб-фреймворк |
+| Django REST Framework | 3.17 | REST API |
+| PostgreSQL | 16 | База данных |
+| Redis | 7 | Брокер сообщений для Celery |
+| Celery | 5.6 | Фоновые задачи |
+| Docker | latest | Контейнеризация |
 
-Стек
-Python 3.13, Django 4.2, DRF 3.17
+## Быстрый старт
 
-PostgreSQL
+### Требования
 
-Redis (broker/backend для Celery)
+- Docker и Docker Compose
+- Python 3.13 (для локальной разработки)
 
-Celery, django‑celery‑results, django‑celery‑beat
+### Запуск через Docker
 
-djangorestframework‑simplejwt, Pillow, python‑dotenv
-
-Установка и запуск
-bash
+```bash
+# Клонируй репозиторий
 git clone https://github.com/Alex-399745146/sky_tbook.git
 cd sky_tbook
 
-poetry install
-poetry run python manage.py migrate
-poetry run python manage.py loaddata users/fixtures/groups.json
-poetry run python manage.py createsuperuser
+# Создай .env файл с реальными секретами
+cp .env.example .env
+# Отредактируй .env, вставь свои ключи Stripe и email
 
-# Сервер
-poetry run python manage.py runserver
+# Запусти все сервисы
+docker compose up
+```
 
-# Celery (Windows)
-poetry run celery -A config worker -P solo --loglevel=info
-poetry run celery -A config beat --loglevel=info
-Redis должен быть запущен локально на redis://127.0.0.1:6379/0.
+Сервисы будут доступны:
+- **Django API**: http://localhost:8000
+- **Документация API**: http://localhost:8000/api/docs/
+- **Админка**: http://localhost:8000/admin
 
-Кратко по API
-JWT: POST /api/token/, POST /api/token/refresh/.
+### Локальная разработка (без Docker)
 
-Пользователи: CRUD под /app_users/users/, регистрация /register/.
+```bash
+# Установи зависимости
+pip install -r requirements.txt
 
-Курсы: /app_materials/courses/ (CRUD, вложенные уроки).
+# Создай .env файл
+cp .env.example .env
 
-Уроки: /app_materials/lessons/.
+# Запусти миграции
+python manage.py migrate
 
-Подписки на курс: эндпоинт toggle‑подписки, рассылка писем при обновлении курса.
+# Создай суперпользователя
+python manage.py createsuperuser
 
-Платежи: /app_users/payments/ с фильтрами по курсу/уроку и способу оплаты.
+# Запусти сервер
+python manage.py runserver
+```
 
-### Периодическая задача (блокировка неактивных пользователей)
-
-- Задача `app_materials.tasks.deactivate_inactive_users_task` отключает пользователей, которые не заходили более месяца (`is_active = False` по полю `last_login`).
-- Расписание создаётся/обновляется командой:
-  ```bash
-  poetry run python manage.py setup_deactivate_inactive_users_task
-  ```
-- Celery Beat запускается:
-  ```bash
-  poetry run celery -A config beat --loglevel=info
-  ```
+## Структура проекта
