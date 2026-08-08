@@ -11,8 +11,12 @@ from app_users.permissions import IsModer, IsOwner
 
 from .models import Course, Lesson, Subscription
 from .paginators import CourseLessonPagination
-from .serializers import (CourseSerializer, CourseSubscriptionToggleRequestSerializer,
-                          CourseSubscriptionToggleResponseSerializer, LessonSerializer)
+from .serializers import (
+    CourseSerializer,
+    CourseSubscriptionToggleRequestSerializer,
+    CourseSubscriptionToggleResponseSerializer,
+    LessonSerializer,
+)
 from .tasks import send_course_update_email_task
 
 
