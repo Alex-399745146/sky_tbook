@@ -1,72 +1,94 @@
-# Sky TBook API 🚀
 
-Учебный DRF-проект: платформа для продажи курсов и уроков с подписками и оплатой через Stripe.
+## API Документация
 
-## Особенности
+После запуска проекта документация доступна по адресу:
 
-- ✅ **Django 4.2 + DRF** — REST API с JWT-аутентификацией
-- ✅ **PostgreSQL 16** — надёжная база данных
-- ✅ **Celery + Redis** — фоновые задачи и периодические задачи
-- ✅ **Stripe** — оплата подписок и курсов
-- ✅ **Docker** — полная контейнеризация для разработки и деплоя
-- ✅ **drf-spectacular** — автоматическая документация API
+- **Swagger UI**: http://localhost:8000/api/docs/
+- **ReDoc**: http://localhost:8000/api/redoc/
+- **OpenAPI схема**: http://localhost:8000/api/schema/
 
-## Технологии
+## Кратко по API
 
-| Технология | Версия | Назначение |
-|------------|--------|------------|
-| Python | 3.13 | Основной язык |
-| Django | 4.2 | Веб-фреймворк |
-| Django REST Framework | 3.17 | REST API |
-| PostgreSQL | 16 | База данных |
-| Redis | 7 | Брокер сообщений для Celery |
-| Celery | 5.6 | Фоновые задачи |
-| Docker | latest | Контейнеризация |
+- **JWT**: POST `/api/token/`, POST `/api/token/refresh/`
+- **Пользователи**: CRUD под `/app_users/users/`, регистрация `/register/`
+- **Курсы**: `/app_materials/courses/` (CRUD, вложенные уроки)
+- **Уроки**: `/app_materials/lessons/`
+- **Подписки на курс**: эндпоинт toggle-подписки, рассылка писем при обновлении курса
+- **Платежи**: `/app_users/payments/` с фильтрами по курсу/уроку и способу оплаты
 
-## Быстрый старт
+## Управление задачами Celery
 
-### Требования
-
-- Docker и Docker Compose
-- Python 3.13 (для локальной разработки)
-
-### Запуск через Docker
+### Запуск воркера
 
 ```bash
-# Клонируй репозиторий
-git clone https://github.com/Alex-399745146/sky_tbook.git
-cd sky_tbook
-
-# Создай .env файл с реальными секретами
-cp .env.example .env
-# Отредактируй .env, вставь свои ключи Stripe и email
-
-# Запусти все сервисы
-docker compose up
+docker compose exec web celery -A config worker --loglevel=info
 ```
 
-Сервисы будут доступны:
-- **Django API**: http://localhost:8000
-- **Документация API**: http://localhost:8000/api/docs/
-- **Админка**: http://localhost:8000/admin
-
-### Локальная разработка (без Docker)
+### Запуск beat (периодические задачи)
 
 ```bash
-# Установи зависимости
-pip install -r requirements.txt
-
-# Создай .env файл
-cp .env.example .env
-
-# Запусти миграции
-python manage.py migrate
-
-# Создай суперпользователя
-python manage.py createsuperuser
-
-# Запусти сервер
-python manage.py runserver
+docker compose exec web celery -A config beat --loglevel=info
 ```
 
-## Структура проекта
+### Периодическая задача (блокировка неактивных пользователей)
+
+Задача `app_materials.tasks.deactivate_inactive_users_task` отключает пользователей, которые не заходили более месяца (`is_active = False` по полю `last_login`).
+
+Расписание создаётся/обновляется командой:
+
+```bash
+python manage.py setup_deactivate_inactive_users_task
+```
+
+## Переменные окружения
+
+### .env (локально, не коммитить!)
+
+```env
+DEBUG=True
+SECRET_KEY=your-secret-key
+DB_NAME=sky_tbook
+DB_USER=postgres
+DB_PASSWORD=your-password
+DB_HOST=localhost
+DB_PORT=5432
+REDIS_URL=redis://127.0.0.1:6379/0
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+EMAIL_HOST_USER=your_email@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password
+```
+
+### .env.docker (безопасные значения, можно коммитить)
+
+```env
+DEBUG=True
+SECRET_KEY=django-insecure-dev-key
+DB_NAME=sky_tbook
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
+REDIS_URL=redis://redis:6379/0
+STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
+STRIPE_SECRET_KEY=sk_test_placeholder
+EMAIL_HOST_USER=your_email@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password
+```
+
+## Вклад в проект
+
+1. Создай форк репозитория
+2. Создай ветку `feature/your-feature`
+3. Внеси изменения
+4. Закоммить и запушь
+5. Создай Pull Request
+
+## Лицензия
+
+MIT License
+
+## Контакты
+
+- **GitHub**: https://github.com/Alex-399745146/sky_tbook
+- **Автор**: @Alex-399745146
