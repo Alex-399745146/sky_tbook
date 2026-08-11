@@ -1,94 +1,67 @@
+sky_tbook
+Учебный Django‑проект LMS (Learning Management System) с API на Django REST Framework и фоновыми задачами через Celery.
 
-## API Документация
+Основной функционал
+Курсы и уроки (Course, Lesson) с владельцем (owner) и вложенным списком уроков.
 
-После запуска проекта документация доступна по адресу:
+Кастомный пользователь по email, профиль, платежи (Payment).
 
-- **Swagger UI**: http://localhost:8000/api/docs/
-- **ReDoc**: http://localhost:8000/api/redoc/
-- **OpenAPI схема**: http://localhost:8000/api/schema/
+JWT‑аутентификация (Simple JWT), роли через группу moderators, пермишены IsModer и IsOwner.
 
-## Кратко по API
+Подписка на обновления курса (Subscription) и рассылка писем подписчикам при обновлении курса (Celery‑задача).
 
-- **JWT**: POST `/api/token/`, POST `/api/token/refresh/`
-- **Пользователи**: CRUD под `/app_users/users/`, регистрация `/register/`
-- **Курсы**: `/app_materials/courses/` (CRUD, вложенные уроки)
-- **Уроки**: `/app_materials/lessons/`
-- **Подписки на курс**: эндпоинт toggle-подписки, рассылка писем при обновлении курса
-- **Платежи**: `/app_users/payments/` с фильтрами по курсу/уроку и способу оплаты
+Периодическая задача через django‑celery‑beat, которая раз в день ищет пользователей с last_login старше месяца и отключает их (is_active = False).
 
-## Управление задачами Celery
+Стек
+Python 3.13, Django 4.2, DRF 3.17
 
-### Запуск воркера
+PostgreSQL
 
-```bash
-docker compose exec web celery -A config worker --loglevel=info
-```
+Redis (broker/backend для Celery)
 
-### Запуск beat (периодические задачи)
+Celery, django‑celery‑results, django‑celery‑beat
 
-```bash
-docker compose exec web celery -A config beat --loglevel=info
-```
+djangorestframework‑simplejwt, Pillow, python‑dotenv
+
+Установка и запуск
+bash
+git clone https://github.com/Alex-399745146/sky_tbook.git
+cd sky_tbook
+
+poetry install
+poetry run python manage.py migrate
+poetry run python manage.py loaddata users/fixtures/groups.json
+poetry run python manage.py createsuperuser
+
+# Сервер
+poetry run python manage.py runserver
+
+# Celery (Windows)
+poetry run celery -A config worker -P solo --loglevel=info
+poetry run celery -A config beat --loglevel=info
+Redis должен быть запущен локально на redis://127.0.0.1:6379/0.
+
+Кратко по API
+JWT: POST /api/token/, POST /api/token/refresh/.
+
+Пользователи: CRUD под /app_users/users/, регистрация /register/.
+
+Курсы: /app_materials/courses/ (CRUD, вложенные уроки).
+
+Уроки: /app_materials/lessons/.
+
+Подписки на курс: эндпоинт toggle‑подписки, рассылка писем при обновлении курса.
+
+Платежи: /app_users/payments/ с фильтрами по курсу/уроку и способу оплаты.
 
 ### Периодическая задача (блокировка неактивных пользователей)
 
-Задача `app_materials.tasks.deactivate_inactive_users_task` отключает пользователей, которые не заходили более месяца (`is_active = False` по полю `last_login`).
-
-Расписание создаётся/обновляется командой:
-
-```bash
-python manage.py setup_deactivate_inactive_users_task
-```
-
-## Переменные окружения
-
-### .env (локально, не коммитить!)
-
-```env
-DEBUG=True
-SECRET_KEY=your-secret-key
-DB_NAME=sky_tbook
-DB_USER=postgres
-DB_PASSWORD=your-password
-DB_HOST=localhost
-DB_PORT=5432
-REDIS_URL=redis://127.0.0.1:6379/0
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-EMAIL_HOST_USER=your_email@gmail.com
-EMAIL_HOST_PASSWORD=your_app_password
-```
-
-### .env.docker (безопасные значения, можно коммитить)
-
-```env
-DEBUG=True
-SECRET_KEY=django-insecure-dev-key
-DB_NAME=sky_tbook
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=db
-DB_PORT=5432
-REDIS_URL=redis://redis:6379/0
-STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
-STRIPE_SECRET_KEY=sk_test_placeholder
-EMAIL_HOST_USER=your_email@gmail.com
-EMAIL_HOST_PASSWORD=your_app_password
-```
-
-## Вклад в проект
-
-1. Создай форк репозитория
-2. Создай ветку `feature/your-feature`
-3. Внеси изменения
-4. Закоммить и запушь
-5. Создай Pull Request
-
-## Лицензия
-
-MIT License
-
-## Контакты
-
-- **GitHub**: https://github.com/Alex-399745146/sky_tbook
-- **Автор**: @Alex-399745146
+- Задача `app_materials.tasks.deactivate_inactive_users_task` отключает пользователей, которые не заходили более месяца (`is_active = False` по полю `last_login`).
+- Расписание создаётся/обновляется командой:
+  ```bash
+  poetry run python manage.py setup_deactivate_inactive_users_task
+  ```
+- Celery Beat запускается:
+  ```bash
+  poetry run celery -A config beat --loglevel=info
+  ```
