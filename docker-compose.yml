@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: sky_tbook
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 399745146
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis:
+    image: redis:7
+    networks:
+      - backend
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+    volumes:
+      - .:/app
+
+  celery_worker:
+    build: .
+    command: celery -A config worker --loglevel=info
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+    volumes:
+      - .:/app
+
+  celery_beat:
+    build: .
+    command: celery -A config beat --loglevel=info
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+    volumes:
+      - .:/app
+
+networks:
+  backend:
+
+volumes:
+  pgdata:

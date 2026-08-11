@@ -25,6 +25,11 @@ dependencies = [
 ]
 
 [tool.poetry]
+name = "sky-tbook"
+version = "0.1.0"
+description = "online learning"
+authors = ["Alexsandr Bachevskiy <bachevskiiaa@gmail.com>"]
+
 packages = [{include = "sky_tbook", from = "src"}]
 
 [build-system]

@@ -3,14 +3,15 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
+# Загружаем .env только локально (не в Docker)
+IN_DOCKER = os.path.exists("/.dockerenv") or os.getenv("DOCKER_CONTAINER")
 
-# Загружаем переменные окружения из файла .env
-load_dotenv(override=True, encoding="utf-8")
+if not IN_DOCKER:
+    from dotenv import load_dotenv
 
+    load_dotenv(override=True, encoding="utf-8")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -20,7 +21,6 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
-
 
 ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1", "0.0.0.0"]
 
@@ -48,6 +48,27 @@ INSTALLED_APPS = [
     "app_materials",
 ]
 
+# Настройки DRF.
+REST_FRAMEWORK: dict[str, Any] = {
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# Время жизни токенов в проекте.
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=25),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
 
 # Настройки DRF.
 REST_FRAMEWORK: dict[str, Any] = {
@@ -86,9 +107,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-
 ROOT_URLCONF = "config.urls"
-
 
 TEMPLATES = [
     {
@@ -106,9 +125,7 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = "config.wsgi.application"
-
 
 DATABASES = {
     "default": {
@@ -120,7 +137,6 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -137,26 +153,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 LANGUAGE_CODE = "ru-RU"
-
 TIME_ZONE = "Europe/Moscow"
-
 USE_I18N = True
 USE_L10N = False
 USE_TZ = True
 
-
 STATIC_URL = "static/"
-
 
 MEDIA_URL = "/media/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 AUTH_USER_MODEL = "app_users.User"
 
 

@@ -1,0 +1,15 @@
+.git
+.gitignore
+.idea
+.mypy_cache
+htmlcov
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.coverage
+.env
+.env.docker
+.dockerignore
+.env.example
+README.md
