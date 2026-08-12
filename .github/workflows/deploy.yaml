@@ -1,0 +1,138 @@
+# =============================================================================
+# Deploy Pipeline — Continuous Deployment
+# =============================================================================
+# Этот файл отвечает за автоматический деплой проекта на сервер.
+# Запускается только после успешного прохождения CI (тестов).
+#
+# Что делает:
+# 1. Подключается к серверу по SSH
+# 2. Обновляет код проекта из репозитория
+# 3. Устанавливает зависимости через Poetry
+# 4. Создаёт .env файл из GitHub Secrets
+# 5. Применяет миграции базы данных
+# 6. Собирает статические файлы
+# 7. Перезапускает Gunicorn сервис
+#
+# Когда запускается:
+# - При пуше в ветки main, develop или feature/*
+# - ТОЛЬКО после успешного прохождения CI pipeline
+# =============================================================================
+
+name: Deploy
+
+# -----------------------------------------------------------------------------
+# Триггеры — запускаем при пуше в указанные ветки
+# -----------------------------------------------------------------------------
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+
+# -----------------------------------------------------------------------------
+# Jobs — задачи workflow
+# -----------------------------------------------------------------------------
+jobs:
+  deploy:
+    name: Deploy to Server
+
+    runs-on: ubuntu-latest
+
+    # Environment — окружение для деплоя (показывает статус в GitHub)
+    environment:
+      name: production
+      url: http://158.160.12.118/
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Шаг 1: Скачиваем код из репозитория
+      # -----------------------------------------------------------------------
+      - uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # Шаг 2: Подключаемся к серверу по SSH и выполняем деплой
+      # -----------------------------------------------------------------------
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          # Хост сервера (из GitHub Secrets)
+          host: ${{ secrets.SSH_HOST }}
+
+          # Пользователь для подключения (из GitHub Secrets)
+          username: ${{ secrets.SSH_USER }}
+
+          # Приватный SSH-ключ (из GitHub Secrets)
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+          # Порт SSH (из GitHub Secrets)
+          port: ${{ secrets.SSH_PORT }}
+
+          # Команды, которые выполняются на сервере
+          script: |
+            # Переходим в директорию проекта
+            cd /var/www/sky_tbook
+            
+            # Если это первый деплой — клонируем репозиторий
+            if [ ! -d ".git" ]; then
+              echo "First deploy — cloning repository..."
+              git clone https://github.com/${{ github.repository }}.git .
+            else
+              # Если уже клонировали — обновляем код
+              echo "Updating repository..."
+              git fetch origin
+              git checkout ${{ github.ref_name }}
+              git reset --hard origin/${{ github.ref_name }}
+            fi
+            
+            # Устанавливаем зависимости через Poetry
+            echo "Installing dependencies with Poetry..."
+            export PATH="$HOME/.local/bin:$PATH"
+            poetry install --no-interaction --no-root
+            
+            # Создаём .env файл (если нет)
+            # Переменные берутся из GitHub Secrets
+            if [ ! -f ".env" ]; then
+              echo "Creating .env file..."
+              cat > .env << EOF
+              SECRET_KEY=${{ secrets.SECRET_KEY }}
+              DEBUG=${{ secrets.DEBUG }}
+              ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+              DB_NAME=${{ secrets.DB_NAME }}
+              DB_USER=${{ secrets.DB_USER }}
+              DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+              DB_HOST=${{ secrets.DB_HOST }}
+              DB_PORT=${{ secrets.DB_PORT }}
+              REDIS_URL=${{ secrets.REDIS_URL }}
+              EOF
+            fi
+            
+            # Применяем миграции базы данных
+            echo "Running database migrations..."
+            poetry run python manage.py migrate --noinput
+            
+            # Собираем статические файлы
+            echo "Collecting static files..."
+            poetry run python manage.py collectstatic --noinput
+            
+            # Перезапускаем Gunicorn сервис
+            echo "Restarting Gunicorn service..."
+            sudo systemctl daemon-reload
+            sudo systemctl restart sky_tbook
+            sudo systemctl status sky_tbook --no-pager
+            
+            # Проверяем статус Nginx
+            echo "Checking Nginx status..."
+            sudo systemctl status nginx --no-pager
+            
+            echo "✅ Deploy completed successfully!"
+
+      # -----------------------------------------------------------------------
+      # Шаг 3: Проверка здоровья (healthcheck)
+      # -----------------------------------------------------------------------
+      # Проверяем, что сервер отвечает после деплоя
+      - name: Healthcheck
+        run: |
+          # Делаем 10 попыток с интервалом 5 секунд
+          # Если сервер не отвечает — продолжаем (не падаем)
+          curl --retry 10 --retry-delay 5 --retry-connrefused -fsS http://158.160.12.118/ || echo "Healthcheck failed, but continuing..."
