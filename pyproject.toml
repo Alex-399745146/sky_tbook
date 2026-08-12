@@ -6,7 +6,7 @@ authors = [
     {name = "Alexsandr Bachevskiy",email = "bachevskiiaa@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13,<4.0"
+requires-python = ">=3.12,<4.0"
 dependencies = [
     "django (==4.2)",
     "psycopg2-binary (>=2.9.12,<3.0.0)",
