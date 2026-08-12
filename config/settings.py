@@ -114,13 +114,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 # DATABASE
 # =============================================================================
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "sky_tbook_db"),
-        "USER": os.getenv("DB_USER", "sky_tbook_user"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "sky_tbook_password_2024"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
-        "PORT": os.getenv("DB_PORT", "5432"),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+        'OPTIONS': {
+            'client_encoding': 'UTF8',
+        },
     }
 }
 
@@ -156,7 +159,6 @@ USE_TZ = True
 # =============================================================================
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"  # ← Добавлено для collectstatic
-STATICFILES_DIRS = [BASE_DIR / "staticfiles"]  # ← Исходные статики
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
