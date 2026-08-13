@@ -53,7 +53,7 @@ jobs:
     steps:
       # Шаг 1: Скачиваем код из репозитория
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Шаг 2: Устанавливаем Poetry (менеджер зависимостей Python)
       - name: Install poetry
@@ -61,7 +61,7 @@ jobs:
 
       # Шаг 3: Настраиваем окружение Python
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           # Версия Python берётся из pyproject.toml (поле requires-python)
           python-version-file: 'pyproject.toml'
@@ -113,13 +113,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install poetry
         run: pipx install poetry
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: 'pyproject.toml'
           cache: poetry
@@ -134,7 +134,7 @@ jobs:
         run: poetry run pytest --ds=config.settings_ci --cov=. --cov-report=xml --cov-report=html
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: false
           files: coverage.xml
@@ -165,15 +165,15 @@ jobs:
     steps:
       # Шаг 1: Скачиваем код
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Шаг 2: Настраиваем Docker Buildx
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Шаг 3: Собираем Docker-образ
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
