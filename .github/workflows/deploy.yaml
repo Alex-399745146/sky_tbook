@@ -56,41 +56,31 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.5
         with:
-          # Хост сервера (из GitHub Secrets)
           host: ${{ secrets.SSH_HOST }}
 
-          # Пользователь для подключения (из GitHub Secrets)
           username: ${{ secrets.SSH_USER }}
 
-          # Приватный SSH-ключ (из GitHub Secrets)
           key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-          # Порт SSH (из GitHub Secrets)
           port: ${{ secrets.SSH_PORT }}
 
-          # Команды, которые выполняются на сервере
           script: |
-          # Переходим в директорию проекта
             cd /var/www/sky_tbook
             
-          # Если это первый деплой — клонируем репозиторий
             if [ ! -d ".git" ]; then
               echo "First deploy — cloning repository..."
               git clone https://github.com/${{ github.repository }}.git .
             else
-          # Если уже клонировали — обновляем код
               echo "Updating repository..."
               git fetch origin
               git checkout ${{ github.ref_name }}
               git reset --hard origin/${{ github.ref_name }}
             fi
             
-          # Устанавливаем зависимости через Poetry
             echo "Installing dependencies with Poetry..."
             export PATH="$HOME/.local/bin:$PATH"
             poetry install --no-interaction --no-root
             
-          # Создаём .env файл (если нет)
             if [ ! -f ".env" ]; then
               echo "Creating .env file..."
 
@@ -105,21 +95,17 @@ jobs:
               echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
             fi
             
-          # Применяем миграции базы данных
             echo "Running database migrations..."
             poetry run python manage.py migrate --noinput
             
-          # Собираем статические файлы
             echo "Collecting static files..."
             poetry run python manage.py collectstatic --noinput
             
-          # Перезапускаем Gunicorn сервис
             echo "Restarting Gunicorn service..."
             sudo systemctl daemon-reload
             sudo systemctl restart sky_tbook
             sudo systemctl status sky_tbook --no-pager
             
-          # Проверяем статус Nginx
             echo "Checking Nginx status..."
             sudo systemctl status nginx --no-pager
             
