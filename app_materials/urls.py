@@ -3,8 +3,15 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (CourseSubscriptionToggleView, CourseViewSet, LessonCreateAPIView, LessonDestroyAPIView,
-                    LessonListAPIView, LessonRetrieveAPIView, LessonUpdateAPIView)
+from .views import (
+    CourseSubscriptionToggleView,
+    CourseViewSet,
+    LessonCreateAPIView,
+    LessonDestroyAPIView,
+    LessonListAPIView,
+    LessonRetrieveAPIView,
+    LessonUpdateAPIView,
+)
 
 app_name = "app_materials"
 
