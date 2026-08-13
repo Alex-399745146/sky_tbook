@@ -103,23 +103,15 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # Зависимости — какие задачи должны завершиться успешно перед запуском этой
     needs: lint
-    # Это означает: "Не запускать test, пока lint не завершится успешно"
 
-    # Переменные окружения для тестов
+    # Переменные окружения для тестов (SQLite не требует БД)
     env:
       SECRET_KEY: test-secret-key-for-ci
       DEBUG: false
-      DB_NAME: test_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: localhost
-      DB_PORT: 5432
       REDIS_URL: redis://localhost:6379/0
 
     steps:
-      # Шаг 1-4: Те же, что и в задаче lint
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -135,24 +127,15 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
-      # Шаг 5: Применяем миграции базы данных
       - name: Run migrations
-        run: poetry run python manage.py migrate
+        run: poetry run python manage.py migrate --noinput --settings=config.settings_ci
 
-      # Шаг 6: Запускаем тесты с измерением покрытия
-      - name: Run tests with coverage
-        run: |
-          # pytest — фреймворк для запуска тестов
-          # --cov=. — измерить покрытие для текущей директории
-          # --cov-report=xml — создать отчёт в формате XML (для Codecov)
-          # --cov-report=html — создать HTML-отчёт (можно скачать и посмотреть)
-          poetry run pytest --cov=. --cov-report=xml --cov-report=html
+      - name: Run tests
+        run: poetry run pytest --ds=config.settings_ci --cov=. --cov-report=xml --cov-report=html
 
-      # Шаг 7: Отправляем отчёт о покрытии в Codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          # fail_ci_if_error: false — не падать, если Codecov недоступен
           fail_ci_if_error: false
           files: coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
