@@ -1,67 +1,104 @@
-sky_tbook
-Учебный Django‑проект LMS (Learning Management System) с API на Django REST Framework и фоновыми задачами через Celery.
+# 📚 Sky TBook
 
-Основной функционал
-Курсы и уроки (Course, Lesson) с владельцем (owner) и вложенным списком уроков.
+Backend LMS-платформы для публикации курсов и учебных материалов. Сервис предоставляет REST API для управления курсами, уроками, пользователями, платежами и подписками. Клиентское приложение взаимодействует с сервером через JSON API.
 
-Кастомный пользователь по email, профиль, платежи (Payment).
+## 🚀 Возможности
 
-JWT‑аутентификация (Simple JWT), роли через группу moderators, пермишены IsModer и IsOwner.
+- Создание и управление курсами и уроками
+- Привязка материалов к владельцу и вложенный список уроков в курсах
+- Регистрация пользователей по email и управление профилем
+- JWT-аутентификация
+- Ролевой доступ: модераторы и владельцы объектов
+- Подписка на обновления курсов и email-уведомления подписчиков
+- Учёт платежей с фильтрацией по курсу, уроку и способу оплаты
+- Фоновая обработка задач через Celery
+- Автоматическая деактивация пользователей, которые не входили в систему более месяца
 
-Подписка на обновления курса (Subscription) и рассылка писем подписчикам при обновлении курса (Celery‑задача).
+## 🧰 Технологии
 
-Периодическая задача через django‑celery‑beat, которая раз в день ищет пользователей с last_login старше месяца и отключает их (is_active = False).
+- Python 3.13
+- Django 4.2, Django REST Framework 3.17
+- PostgreSQL
+- Celery, Redis, django-celery-beat, django-celery-results
+- Simple JWT
+- Poetry
 
-Стек
-Python 3.13, Django 4.2, DRF 3.17
+## 🛠️ Установка и запуск
 
-PostgreSQL
+### 📋 Требования
 
-Redis (broker/backend для Celery)
+Установите Python, Poetry, PostgreSQL и Redis. Создайте базу данных PostgreSQL и подготовьте переменные окружения для подключения к ней и настройки приложения.
 
-Celery, django‑celery‑results, django‑celery‑beat
+### 📥 Установка зависимостей
 
-djangorestframework‑simplejwt, Pillow, python‑dotenv
-
-Установка и запуск
-bash
-git clone https://github.com/Alex-399745146/sky_tbook.git
+```bash
+git clone [https://github.com/Alex-399745146/sky_tbook.git](https://github.com/Alex-399745146/sky_tbook.git)
 cd sky_tbook
-
 poetry install
+```
+
+Создайте файл `.env` и укажите в нём параметры приложения и подключения к PostgreSQL, соответствующие настройкам проекта.
+
+### 🗄️ Подготовка базы данных
+
+```bash
 poetry run python manage.py migrate
-poetry run python manage.py loaddata users/fixtures/groups.json
 poetry run python manage.py createsuperuser
+```
 
-# Сервер
+При наличии фикстур загрузите подготовленные данные:
+
+```bash
+poetry run python manage.py loaddata <путь-к-файлу-фикстуры>
+```
+
+### ▶️ Запуск Django-сервера
+
+```bash
 poetry run python manage.py runserver
+```
 
-# Celery (Windows)
+## 🔄 Celery и Redis
+
+Убедитесь, что Redis запущен и доступен по адресу `redis://127.0.0.1:6379/0`.
+
+Запустите Celery worker и Celery Beat в отдельных терминалах:
+
+```bash
 poetry run celery -A config worker -P solo --loglevel=info
+```
+
+```bash
 poetry run celery -A config beat --loglevel=info
-Redis должен быть запущен локально на redis://127.0.0.1:6379/0.
+```
 
-Кратко по API
-JWT: POST /api/token/, POST /api/token/refresh/.
+Для настройки периодической задачи деактивации неактивных пользователей выполните:
 
-Пользователи: CRUD под /app_users/users/, регистрация /register/.
+```bash
+poetry run python manage.py setup_deactivate_inactive_users_task
+```
 
-Курсы: /app_materials/courses/ (CRUD, вложенные уроки).
+Задача проверяет поле `last_login` и деактивирует аккаунты пользователей, не входивших в систему более месяца.
 
-Уроки: /app_materials/lessons/.
+## 🌍 Основные API-эндпоинты
 
-Подписки на курс: эндпоинт toggle‑подписки, рассылка писем при обновлении курса.
+| Раздел | Эндпоинты |
+|---|---|
+| 🔐 JWT-аутентификация | `POST /api/token/`, `POST /api/token/refresh/` |
+| 👥 Пользователи | `/app_users/users/`, регистрация — `/app_users/users/register/` |
+| 📚 Курсы | `/app_materials/courses/` |
+| 📝 Уроки | `/app_materials/lessons/` |
+| 💳 Платежи | `/app_users/payments/` |
 
-Платежи: /app_users/payments/ с фильтрами по курсу/уроку и способу оплаты.
+Подписки на курсы управляются отдельным эндпоинтом переключения подписки. При обновлении курса подписчикам отправляются email-уведомления.
 
-### Периодическая задача (блокировка неактивных пользователей)
+## 🛡️ Структура доступа
 
-- Задача `app_materials.tasks.deactivate_inactive_users_task` отключает пользователей, которые не заходили более месяца (`is_active = False` по полю `last_login`).
-- Расписание создаётся/обновляется командой:
-  ```bash
-  poetry run python manage.py setup_deactivate_inactive_users_task
-  ```
-- Celery Beat запускается:
-  ```bash
-  poetry run celery -A config beat --loglevel=info
-  ```
+- 👤 **Владелец** управляет собственными объектами в рамках назначенных разрешений.
+- 🧑‍⚖️ **Модератор** получает расширенные права через группу модераторов.
+- 🔒 Для разграничения доступа используются `IsOwner` и `IsModer`.
+
+## ✍️ Автор
+
+Alex Bachevskiy  
+Python-разработчик | Python - developer
