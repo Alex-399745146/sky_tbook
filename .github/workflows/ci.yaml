@@ -51,6 +51,11 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # mypy-плагин импортирует Django-настройки, поэтому нужен валидный SECRET_KEY.
+    env:
+      SECRET_KEY: test-secret-key-for-ci
+      DEBUG: "false"
+
     steps:
       # Шаг 1: Скачиваем код из репозитория
       - name: Checkout code
