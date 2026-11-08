@@ -137,7 +137,16 @@ jobs:
         run: poetry run python manage.py migrate --noinput --settings=config.settings_ci
 
       - name: Run tests
-        run: poetry run pytest --ds=config.settings_ci --cov=. --cov-report=xml --cov-report=html
+        run: |
+          set +e
+          poetry run pytest --ds=config.settings_ci --cov=. --cov-report=xml --cov-report=html --tb=line 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            grep -E "^(FAILED|ERROR|E   )" pytest.log | head -20 | while IFS= read -r line; do
+              echo "::error title=Pytest::${line}"
+            done
+          fi
+          exit "$status"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
