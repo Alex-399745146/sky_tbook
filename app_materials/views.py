@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from app_users.permissions import IsModer, IsOwner
+from app_users.permissions import IsNotModer, IsOwnerOnly, IsOwnerOrModerator
 
 from .models import Course, Lesson, Subscription
 from .paginators import CourseLessonPagination
@@ -29,7 +29,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     Базируется на queryset всех курсов и CourseSerializer.
     """
 
-    queryset = Course.objects.all()
+    queryset = Course.objects.order_by("id")
     serializer_class = CourseSerializer
     pagination_class = CourseLessonPagination
 
@@ -37,19 +37,18 @@ class CourseViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def get_permissions(self):
-        # По умолчанию только авторизованные.
         if self.action in ["list", "retrieve"]:
-            # Просмотр: авторизованные или модератор, или владелец.
-            permission_classes = [IsAuthenticated, IsModer | IsOwner]
+            # Каталог курсов доступен любому авторизованному пользователю.
+            permission_classes = [IsAuthenticated]
         elif self.action in ["update", "partial_update"]:
             # Редактировать: модераторы (любые объекты) или владельцы.
-            permission_classes = [IsAuthenticated, IsModer | IsOwner]
+            permission_classes = [IsAuthenticated, IsOwnerOrModerator]
         elif self.action == "destroy":
             # Удалять: только владельцы, модераторы НЕ могут удалять.
-            permission_classes = [IsAuthenticated, IsOwner | IsModer]
+            permission_classes = [IsAuthenticated, IsOwnerOnly]
         elif self.action == "create":
-            # Создание курса: авторизованные НЕ‑модераторы (модератор не может создавать).
-            permission_classes = [IsAuthenticated, ~IsModer]
+            # Создание курса: авторизованные НЕ-модераторы.
+            permission_classes = [IsAuthenticated, IsNotModer]
         else:
             permission_classes = [IsAuthenticated]
 
@@ -72,9 +71,9 @@ class LessonListAPIView(generics.ListAPIView):
     сериализованных через LessonSerializer.
     """
 
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.order_by("id")
     serializer_class = LessonSerializer
-    permission_classes = [IsAuthenticated, IsModer | IsOwner]
+    permission_classes = [IsAuthenticated]
     pagination_class = CourseLessonPagination
 
 
@@ -86,9 +85,9 @@ class LessonCreateAPIView(generics.CreateAPIView):
     с помощью LessonSerializer и сохраняет новый объект Lesson.
     """
 
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.order_by("id")
     serializer_class = LessonSerializer
-    permission_classes = [IsAuthenticated, ~IsModer]
+    permission_classes = [IsAuthenticated, IsNotModer]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -102,9 +101,9 @@ class LessonRetrieveAPIView(generics.RetrieveAPIView):
     возвращает один объект, сериализованный LessonSerializer.
     """
 
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.order_by("id")
     serializer_class = LessonSerializer
-    permission_classes = [IsAuthenticated, IsModer | IsOwner]
+    permission_classes = [IsAuthenticated]
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
@@ -115,8 +114,9 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
     для валидации и сохранения изменений объекта Lesson.
     """
 
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.order_by("id")
     serializer_class = LessonSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrModerator]
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
@@ -127,9 +127,9 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     из queryset.
     """
 
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.order_by("id")
     serializer_class = LessonSerializer
-    permission_classes = [IsAuthenticated, IsOwner & ~IsModer]
+    permission_classes = [IsAuthenticated, IsOwnerOnly]
 
 
 @extend_schema(
