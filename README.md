@@ -221,7 +221,12 @@ Workflow `.github/workflows/deploy.yaml` готов к работе, но зап
 
 `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `SSH_PORT`, `SECRET_KEY`, `DEBUG`,
 `ALLOWED_HOSTS`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`,
-`REDIS_URL`. Переменная `APP_URL` (Settings → Variables) включает healthcheck.
+`REDIS_URL`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `EMAIL_HOST`,
+`EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`.
+
+Перед миграциями workflow заново создаёт `.env` на сервере из этих секретов,
+поэтому значения не остаются устаревшими после ротации. Переменная `APP_URL`
+(Settings → Variables) включает healthcheck.
 
 ## ✍️ Автор
 
