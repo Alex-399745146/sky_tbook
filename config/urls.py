@@ -1,5 +1,7 @@
 # config/urls.py
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
@@ -25,6 +27,11 @@ urlpatterns = [
     # Веб-интерфейс.
     path("", include("app_web.urls")),
 ]
+
+# В разработке Django сам раздаёт загруженные обложки и аватары.
+# В production этим занимается Nginx (или другой reverse proxy).
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Для справки:
 
