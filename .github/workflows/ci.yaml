@@ -26,6 +26,7 @@ on:
       - develop           # Ветка для разработки новых фич
       - main              # Основная стабильная ветка
       - 'feature/**'      # Все ветки, начинающиеся с feature/
+      - 'fix/**'          # Ветки с исправлениями
 
   # Запуск при pull request (создание, обновление коммитами, ревью)
   pull_request:
@@ -49,6 +50,11 @@ jobs:
     name: Lint
 
     runs-on: ubuntu-latest
+
+    # mypy-плагин импортирует Django-настройки, поэтому нужен валидный SECRET_KEY.
+    env:
+      SECRET_KEY: test-secret-key-for-ci
+      DEBUG: "false"
 
     steps:
       # Шаг 1: Скачиваем код из репозитория
@@ -160,7 +166,8 @@ jobs:
     if: |
       github.ref == 'refs/heads/main' || 
       github.ref == 'refs/heads/develop' || 
-      startsWith(github.ref, 'refs/heads/feature/')
+      startsWith(github.ref, 'refs/heads/feature/') ||
+      startsWith(github.ref, 'refs/heads/fix/')
 
     steps:
       # Шаг 1: Скачиваем код

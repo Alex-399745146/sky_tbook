@@ -98,3 +98,19 @@ addopts = [
     "--cov-report=xml",
     "--cov-report=html",
 ]
+
+[tool.coverage.run]
+omit = [
+    "*/migrations/*",
+    "*/tests.py",
+    "manage.py",
+    "config/asgi.py",
+    "config/wsgi.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

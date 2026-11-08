@@ -34,9 +34,10 @@ def create_stripe_price(product_id: str, amount: int) -> str:
     return price.id
 
 
-def create_stripe_checkout_session(price_id: str, user_email: str, payment_id: int) -> str:
+def create_stripe_checkout_session(price_id: str, user_email: str, payment_id: int):
     """
-    Создаёт Checkout Session и возвращает URL оплаты.
+    Создаёт Checkout Session и возвращает объект сессии Stripe
+    (нужны и id, и url).
     """
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],
@@ -54,4 +55,4 @@ def create_stripe_checkout_session(price_id: str, user_email: str, payment_id: i
             "payment_id": str(payment_id),
         },
     )
-    return session.url  # type: ignore[return-value]
+    return session

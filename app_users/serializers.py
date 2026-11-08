@@ -1,6 +1,7 @@
 # app_users/serializers.py
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 from .models import Payment
@@ -49,6 +50,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "password",
         )
 
+    def validate_password(self, value: str) -> str:
+        validate_password(value)
+        return value
+
     def create(self, validated_data):
         user = User(
             email=validated_data.get("email"),
@@ -71,3 +76,12 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
             "amount",
             "payment_method",
         )
+
+    def validate(self, attrs):
+        has_course = attrs.get("paid_course") is not None
+        has_lesson = attrs.get("paid_lesson") is not None
+        if has_course == has_lesson:
+            raise serializers.ValidationError("Укажите ровно один объект оплаты: paid_course или paid_lesson.")
+        if attrs["amount"] <= 0:
+            raise serializers.ValidationError({"amount": "Сумма должна быть больше нуля."})
+        return attrs

@@ -34,7 +34,10 @@ htmlcov/
 # Environment
 .env
 .env.local
+.env.docker
 *.env.local
+!.env.example
+!.env.docker.example
 
 # OS
 .DS_Store

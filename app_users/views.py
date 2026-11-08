@@ -1,7 +1,6 @@
 # app_users/views.py
 
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -9,7 +8,10 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from app_materials.paginators import CourseLessonPagination
+
 from .models import Payment
+from .permissions import IsModer, IsSelfOrModerator, is_moderator
 from .serializers import CreatePaymentSerializer, PaymentSerializer, UserRegisterSerializer, UserSerializer
 from .services import create_stripe_checkout_session, create_stripe_price, create_stripe_product
 
@@ -17,8 +19,12 @@ User = get_user_model()
 
 
 class PaymentListAPIView(ListAPIView):
-    queryset = Payment.objects.all()
+    """История платежей: пользователь видит только свои, модератор — все."""
+
+    queryset = Payment.objects.none()
     serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CourseLessonPagination
 
     # Какие фильтры включаем.
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -34,30 +40,49 @@ class PaymentListAPIView(ListAPIView):
     # Дефолт — новые сверху.
     ordering = ["-payment_date"]
 
+    def get_queryset(self):
+        # При генерации OpenAPI-схемы пользователя ещё нет.
+        if getattr(self, "swagger_fake_view", False) or not self.request.user.is_authenticated:
+            return Payment.objects.none()
+
+        queryset = Payment.objects.select_related("user", "paid_course", "paid_lesson")
+        if is_moderator(self.request.user):
+            return queryset
+        return queryset.filter(user=self.request.user)
+
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    Полный CRUD для пользователей.
+    """CRUD пользователей.
+
+    Список и удаление доступны модераторам, работу со своим профилем —
+    владельцу профиля, с чужим — модератору.
     """
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-    # Для Task 3 мы позже добавим IsOwner/ограничения по объектам.
+    pagination_class = CourseLessonPagination
+
+    def get_permissions(self):
+        if self.action in ["list", "create", "destroy"]:
+            permission_classes = [IsAuthenticated, IsModer]
+        elif self.action in ["retrieve", "update", "partial_update"]:
+            permission_classes = [IsAuthenticated, IsSelfOrModerator]
+        else:
+            permission_classes = [IsAuthenticated]
+
+        return [permission() for permission in permission_classes]
 
 
 class UserRegisterAPIView(generics.CreateAPIView):
-    """
-    Регистрация пользователя.
-    """
+    """Регистрация пользователя."""
 
     serializer_class = UserRegisterSerializer
     permission_classes = [AllowAny]
 
 
 class CreatePaymentView(generics.CreateAPIView):
-    """
-    Создаёт платеж в БД и возвращает ссылку на оплату в Stripe.
+    """Создаёт платёж в БД и возвращает ссылку на оплату в Stripe.
+
     POST /app_users/payments/create/
     Body:
     {
@@ -68,6 +93,7 @@ class CreatePaymentView(generics.CreateAPIView):
     """
 
     serializer_class = CreatePaymentSerializer
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -82,14 +108,9 @@ class CreatePaymentView(generics.CreateAPIView):
         if paid_course:
             name = f"Курс: {paid_course.name}"
             description = paid_course.description or ""
-        elif paid_lesson:
+        else:
             name = f"Урок: {paid_lesson.name}"
             description = paid_lesson.description or ""
-        else:
-            return Response(
-                {"detail": "Нужно указать paid_course или paid_lesson."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
         # 1. Создаём платёж в БД.
         payment = Payment.objects.create(
@@ -106,13 +127,13 @@ class CreatePaymentView(generics.CreateAPIView):
         # 3. Stripe: продукт -> цена -> сессия.
         product_id = create_stripe_product(paid_course, paid_lesson, name, description)
         price_id = create_stripe_price(product_id, amount_cents)
-        session_url = create_stripe_checkout_session(price_id, request.user.email, payment.id)
+        session = create_stripe_checkout_session(price_id, request.user.email, payment.id)
 
-        # 4. Сохраняем в платеж.
+        # 4. Сохраняем в платёж.
         payment.stripe_product_id = product_id
         payment.stripe_price_id = price_id
-        payment.stripe_session_id = session_url  # в URL, но для простоты так
-        payment.payment_url = session_url
+        payment.stripe_session_id = session.id
+        payment.payment_url = session.url
         payment.save()
 
         # 5. Возвращаем информацию о платеже и ссылку.
@@ -120,7 +141,7 @@ class CreatePaymentView(generics.CreateAPIView):
             {
                 "payment_id": payment.id,
                 "amount": str(payment.amount),
-                "payment_url": session_url,
+                "payment_url": session.url,
             },
             status=status.HTTP_201_CREATED,
         )
