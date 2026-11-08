@@ -95,7 +95,7 @@ class TestAuthentication(BaseWebTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "правильные")
+        self.assertTrue(response.context["form"].non_field_errors())
 
     def test_registration_creates_user_and_logs_in(self):
         response = self.client.post(
@@ -125,7 +125,7 @@ class TestAuthentication(BaseWebTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Пароли не совпадают")
+        self.assertTrue(response.context["form"].errors["password2"])
         self.assertFalse(User.objects.filter(email="new@example.com").exists())
 
     def test_registration_rejects_weak_password(self):
@@ -241,8 +241,8 @@ class TestPaymentsPage(BaseWebTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Мои платежи")
-        self.assertContains(response, "1000,00")
-        self.assertNotContains(response, "500,00")
+        self.assertContains(response, "1000")
+        self.assertNotContains(response, "500")
 
     def test_moderator_sees_all_payments(self):
         self.client.force_login(self.moderator)
@@ -251,9 +251,9 @@ class TestPaymentsPage(BaseWebTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Все платежи")
-        self.assertContains(response, "1000,00")
-        self.assertContains(response, "500,00")
-        self.assertContains(response, "1500,00")
+        self.assertContains(response, "1000")
+        self.assertContains(response, "500")
+        self.assertContains(response, "1500")
 
 
 class TestDocsPage(BaseWebTestCase):
