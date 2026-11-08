@@ -3,13 +3,16 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
-# Загружаем .env только локально (не в Docker)
+from django.core.exceptions import ImproperlyConfigured
+
+# Загружаем .env только локально (не в Docker).
+# Переменные окружения имеют приоритет над файлом .env.
 IN_DOCKER = os.path.exists("/.dockerenv") or os.getenv("DOCKER_CONTAINER")
 
 if not IN_DOCKER:
     from dotenv import load_dotenv
 
-    load_dotenv(override=True, encoding="utf-8")
+    load_dotenv(encoding="utf-8")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,8 +25,12 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default-key-for-dev-only")
 # DEBUG — False по умолчанию (безопаснее для production)
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
+# Не позволяем запустить production с отладочным ключом.
+if not DEBUG and SECRET_KEY.startswith("django-insecure"):
+    raise ImproperlyConfigured("SECRET_KEY не задан: для DEBUG=False нужен настоящий ключ из переменных окружения.")
+
 # ALLOWED_HOSTS — читаем из .env, разбиваем по запятой
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
 
 # API STRIPE
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")

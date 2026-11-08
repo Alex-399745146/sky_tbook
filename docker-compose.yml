@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_DB: sky_tbook
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 399745146
+      POSTGRES_DB: ${DB_NAME:-sky_tbook}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Задайте DB_PASSWORD в .env.docker}
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
