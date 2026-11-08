@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль — Sky TBook{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" class="profile-avatar" alt="Аватар">
+                    {% else %}
+                        <div class="profile-avatar bg-primary-subtle text-primary d-flex align-items-center justify-content-center fs-1">
+                            <i class="bi bi-person"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h1 class="h3 mb-1">Профиль</h1>
+                        <div class="text-body-secondary">{{ user.email }}</div>
+                        <div class="mt-2">
+                            {% if is_moderator %}
+                                <span class="badge text-bg-warning text-dark">
+                                    <i class="bi bi-shield-check me-1"></i>Модератор
+                                </span>
+                            {% else %}
+                                <span class="badge text-bg-light">Пользователь</span>
+                            {% endif %}
+                            <span class="badge text-bg-light">
+                                <i class="bi bi-calendar3 me-1"></i>с {{ user.date_joined|date:"d.m.Y" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2 me-1"></i>Сохранить
+                        </button>
+                        <a class="btn btn-outline-secondary" href="{% url 'app_web:home' %}">К курсам</a>
+                        <a class="btn btn-outline-secondary" href="{% url 'app_web:payments' %}">Мои платежи</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% if is_paginated %}
+<nav class="mt-4" aria-label="Пагинация">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+            <a class="page-link"
+               href="?{% if query %}q={{ query|urlencode }}&{% endif %}page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}"
+               {% if not page_obj.has_previous %}tabindex="-1" aria-disabled="true"{% endif %}>
+                Назад
+            </a>
+        </li>
+        {% for number in paginator.page_range %}
+            {% if number == page_obj.number %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ number }}</span></li>
+            {% elif number > page_obj.number|add:"-3" and number < page_obj.number|add:"3" %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if query %}q={{ query|urlencode }}&{% endif %}page={{ number }}">{{ number }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+            <a class="page-link"
+               href="?{% if query %}q={{ query|urlencode }}&{% endif %}page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}"
+               {% if not page_obj.has_next %}tabindex="-1" aria-disabled="true"{% endif %}>
+                Вперёд
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}

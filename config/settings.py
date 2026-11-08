@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     # Мои приложения.
     "app_users",
     "app_materials",
+    "app_web",
 ]
 
 # =============================================================================
@@ -83,6 +84,13 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=25),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
+
+# =============================================================================
+# АУТЕНТИФИКАЦИЯ ВЕБ-ИНТЕРФЕЙСА
+# =============================================================================
+LOGIN_URL = "app_web:login"
+LOGIN_REDIRECT_URL = "app_web:home"
+LOGOUT_REDIRECT_URL = "app_web:home"
 
 # =============================================================================
 # MIDDLEWARE

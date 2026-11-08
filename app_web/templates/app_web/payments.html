@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Платежи — Sky TBook{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">{% if is_moderator %}Все платежи{% else %}Мои платежи{% endif %}</h1>
+        <p class="text-body-secondary mb-0">
+            {% if is_moderator %}
+                Платежи всех пользователей платформы.
+            {% else %}
+                История ваших оплат курсов и уроков.
+            {% endif %}
+        </p>
+    </div>
+    <span class="badge text-bg-success fs-6">
+        Сумма: {{ total_amount|floatformat:2 }} ₽
+    </span>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th scope="col">Дата</th>
+                {% if is_moderator %}<th scope="col">Пользователь</th>{% endif %}
+                <th scope="col">Объект оплаты</th>
+                <th scope="col">Способ</th>
+                <th scope="col" class="text-end">Сумма</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for payment in payments %}
+                <tr>
+                    <td class="text-nowrap">{{ payment.payment_date|date:"d.m.Y H:i" }}</td>
+                    {% if is_moderator %}<td>{{ payment.user.email }}</td>{% endif %}
+                    <td>
+                        {% if payment.paid_course %}
+                            <a class="text-decoration-none" href="{% url 'app_web:course-detail' payment.paid_course.pk %}">
+                                <i class="bi bi-journal-bookmark me-1"></i>{{ payment.paid_course.name }}
+                            </a>
+                        {% elif payment.paid_lesson %}
+                            <span><i class="bi bi-play-btn me-1"></i>Урок: {{ payment.paid_lesson.name }}</span>
+                        {% else %}
+                            <span class="text-body-secondary">Объект удалён</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if payment.payment_method == "stripe" %}
+                            <span class="badge text-bg-primary">Stripe</span>
+                        {% elif payment.payment_method == "cash" %}
+                            <span class="badge text-bg-success">Наличные</span>
+                        {% else %}
+                            <span class="badge text-bg-info text-dark">Перевод</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end fw-semibold">{{ payment.amount|floatformat:2 }} ₽</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="{% if is_moderator %}5{% else %}4{% endif %}" class="text-center text-body-secondary py-4">
+                        Платежей пока нет.
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include "app_web/_pagination.html" %}
+{% endblock %}
