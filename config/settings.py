@@ -192,6 +192,9 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Учебный DRF-проект: курсы, уроки, подписки, оплаты.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # ReDoc 3.x собирается как ES-модуль и не работает через обычный <script>,
+    # который использует drf-spectacular. Фиксируем стабильную 2.x.
+    "REDOC_DIST": "https://cdn.jsdelivr.net/npm/redoc@2.5.0",
 }
 
 # =============================================================================

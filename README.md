@@ -43,9 +43,11 @@ Django-шаблонах и Bootstrap 5, фоновая обработка чер
 
 ![Форма курса](docs/screenshots/ui_course_form.png)
 
-Swagger UI и админка Django:
+Swagger UI, ReDoc и админка Django:
 
 ![Swagger UI](docs/screenshots/swagger.png)
+
+![ReDoc](docs/screenshots/redoc.png)
 
 ![Админка](docs/screenshots/admin_courses.png)
 

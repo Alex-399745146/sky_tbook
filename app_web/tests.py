@@ -1,5 +1,6 @@
 # app_web/tests.py
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
@@ -271,6 +272,12 @@ class TestDocsPage(BaseWebTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Swagger UI")
         self.assertContains(response, "/api/schema/redoc/")
+
+    def test_redoc_is_pinned_to_v2(self):
+        redoc_dist = settings.SPECTACULAR_SETTINGS["REDOC_DIST"]
+
+        # ReDoc 3.x поставляется как ES-модуль и не работает через <script>.
+        self.assertIn("redoc@2.", redoc_dist)
 
 
 class TestCourseCRUD(BaseWebTestCase):
