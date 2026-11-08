@@ -50,6 +50,14 @@
     box-shadow: 0 0 0 1px #dee2e6;
 }
 
+.lesson-thumb {
+    width: 96px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: .5rem;
+    flex-shrink: 0;
+}
+
 .lesson-row:hover {
     background-color: #f8f9fa;
 }

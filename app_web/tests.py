@@ -71,6 +71,14 @@ class TestCoursePages(BaseWebTestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_lesson_preview_is_shown(self):
+        self.lesson.preview = "lesson_previews/test.jpg"
+        self.lesson.save(update_fields=["preview"])
+
+        response = self.client.get(reverse("app_web:course-detail", kwargs={"pk": self.course.pk}))
+
+        self.assertContains(response, "lesson_previews/test.jpg")
+
 
 class TestAuthentication(BaseWebTestCase):
     def test_login_page_renders(self):
