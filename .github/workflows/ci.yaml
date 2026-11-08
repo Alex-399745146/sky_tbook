@@ -69,8 +69,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          # Версия Python берётся из pyproject.toml (поле requires-python)
-          python-version-file: 'pyproject.toml'
+          # Django 4.2 несовместим с Python 3.14 — фиксируем 3.13
+          python-version: '3.13'
           # Кэшируем зависимости Poetry для ускорения последующих запусков
           cache: poetry
 
@@ -127,7 +127,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version-file: 'pyproject.toml'
+          python-version: '3.13'
           cache: poetry
 
       - name: Install dependencies
