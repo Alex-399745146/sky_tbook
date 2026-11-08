@@ -7,8 +7,9 @@
 ![DRF](https://img.shields.io/badge/DRF-3.17-A30000)
 ![PostgreSQL](https://img.shields.io/badge/postgresql-16-336791)
 
-Backend LMS-платформы: курсы и уроки, кастомные пользователи, платежи, подписки
-и email-уведомления. REST API на Django REST Framework, фоновая обработка через Celery.
+LMS-платформа: курсы и уроки, кастомные пользователи, платежи, подписки
+и email-уведомления. REST API на Django REST Framework, веб-интерфейс на
+Django-шаблонах и Bootstrap 5, фоновая обработка через Celery.
 
 ## 🚀 Возможности
 
@@ -20,24 +21,64 @@ Backend LMS-платформы: курсы и уроки, кастомные п�
 - Платежи: наличные, перевод, Stripe Checkout.
 - Автоматическая деактивация пользователей, не входивших более месяца.
 - OpenAPI-схема, Swagger UI и ReDoc.
-- 60 тестов, покрытие 93%.
+- Веб-интерфейс: каталог, карточка курса, подписка, профиль, платежи.
+- CRUD курсов и уроков через веб-формы с проверкой прав.
+- 105 тестов, покрытие 94%.
+
+## 🎬 Видео-демо
+
+![Демо Sky TBook](docs/demo.gif)
+
+За 51 секунду: каталог → карточка курса → вход → создание курса → подписка →
+платежи → профиль → админка → Swagger UI и ReDoc.
 
 ## 📸 Скриншоты
 
-Swagger UI со всеми эндпоинтами:
+Каталог курсов:
+
+![Каталог курсов](docs/screenshots/ui_home.png)
+
+Карточка курса с уроками и действиями владельца:
+
+![Карточка курса](docs/screenshots/ui_course_manage.png)
+
+Личный кабинет с платежами:
+
+![Платежи](docs/screenshots/ui_payments.png)
+
+Создание курса:
+
+![Форма курса](docs/screenshots/ui_course_form.png)
+
+Swagger UI, ReDoc и админка Django:
 
 ![Swagger UI](docs/screenshots/swagger.png)
 
-Админка Django:
+![ReDoc](docs/screenshots/redoc.png)
 
 ![Админка](docs/screenshots/admin_courses.png)
+
+## 🖥️ Веб-интерфейс
+
+- `/` — каталог курсов с поиском и пагинацией.
+- `/courses/<id>/` — курс, уроки, подписка и доступ к видео.
+- `/courses/new/`, `/courses/<id>/edit/`, `/courses/<id>/delete/` — CRUD курса.
+- `/lessons/new/`, `/lessons/<id>/edit/`, `/lessons/<id>/delete/` — CRUD урока.
+- `/login/`, `/register/`, `/logout/` — сессионная авторизация Django.
+- `/profile/` — редактирование профиля и аватара.
+- `/payments/` — свои платежи; модератор видит все.
+- `/docs/` — ссылки на Swagger UI, ReDoc и OpenAPI JSON.
+
+API и веб-интерфейс работают параллельно: DRF использует JWT, а браузерные
+страницы — обычные Django-сессии и CSRF-защиту. Права проверяются на сервере
+теми же функциями, что и в API.
 
 ## 🧰 Стек
 
 | Слой | Технологии |
 |---|---|
 | Язык | Python 3.13 |
-| Web | Django 4.2, Django REST Framework 3.17 |
+| Web | Django 4.2, Django REST Framework 3.17, Bootstrap 5 |
 | База данных | PostgreSQL 16 |
 | Аутентификация | Simple JWT |
 | Фоновые задачи | Celery, Redis, django-celery-beat, django-celery-results |
@@ -198,15 +239,32 @@ poetry run python manage.py setup_deactivate_inactive_users_task
 
 Модератор — суперпользователь или участник группы `moderators`.
 
+## 🧪 Демо-данные
+
+Команда создаёт курсы, уроки, платежи, подписки и демо-аккаунты. Её можно
+запускать повторно — данные не дублируются.
+
+```bash
+poetry run python manage.py migrate
+poetry run python manage.py seed_demo
+```
+
+| Роль | Email | Пароль |
+|---|---|---|
+| Студент | `student@example.com` | `DemoPass123!` |
+| Владелец курсов | `teacher@example.com` | `DemoPass123!` |
+| Модератор | `moderator@example.com` | `DemoPass123!` |
+| Суперпользователь | `admin@example.com` | `DemoPass123!` |
+
 ## ✅ Тесты
 
 ```bash
 poetry run pytest
 ```
 
-- 60 тестов: регистрация, JWT, роли, права владельца и модератора,
-  платежи, подписки, email-уведомления.
-- Покрытие — **93%** (`pytest --cov`, без миграций и самих тестов).
+- 105 тестов: регистрация, JWT, роли, права владельца и модератора,
+  платежи, подписки, email-уведомления, страницы и CRUD веб-интерфейса.
+- Покрытие — **94%** (`pytest --cov`, без миграций и самих тестов).
 - Тесты используют SQLite и eager-режим Celery, внешние сервисы замоканы.
 
 CI (`.github/workflows/ci.yaml`) запускает black, isort, flake8, mypy, тесты

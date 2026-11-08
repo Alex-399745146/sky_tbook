@@ -43,4 +43,5 @@ htmlcov/
 .DS_Store
 Thumbs.db
 /test_db.sqlite3
+/demo.sqlite3
 /coverage.xml

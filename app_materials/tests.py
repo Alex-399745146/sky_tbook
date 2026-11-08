@@ -1,9 +1,13 @@
 # app_materials/tests.py
 
+from io import StringIO
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
+from django.core.management import call_command
 from django.db import IntegrityError, transaction
+from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -337,3 +341,28 @@ class TestModels(BaseAPITestCase):
 
         self.assertIn(self.other.email, str(subscription))
         self.assertIn(self.course.name, str(subscription))
+
+
+class TestSeedDemoCommand(TestCase):
+    def test_seed_demo_creates_data_and_is_idempotent(self):
+        call_command("seed_demo", stdout=StringIO())
+        call_command("seed_demo", stdout=StringIO())
+
+        emails = [
+            "student@example.com",
+            "teacher@example.com",
+            "moderator@example.com",
+            "admin@example.com",
+        ]
+        self.assertEqual(User.objects.filter(email__in=emails).count(), 4)
+        self.assertEqual(Course.objects.filter(name="Python с нуля").count(), 1)
+        self.assertEqual(Lesson.objects.filter(course__name="Python с нуля").count(), 3)
+
+        student = User.objects.get(email="student@example.com")
+        self.assertTrue(student.check_password("DemoPass123!"))
+        self.assertEqual(student.payments.count(), 2)
+        self.assertEqual(student.course_subscriptions.count(), 2)
+
+        admin = User.objects.get(email="admin@example.com")
+        self.assertTrue(admin.is_superuser)
+        self.assertTrue(admin.is_staff)

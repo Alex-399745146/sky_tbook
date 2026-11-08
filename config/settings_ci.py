@@ -13,10 +13,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = True
 
+# Для записи демо можно указать отдельный файл: SQLITE_DB=demo.sqlite3.
+sqlite_db = os.getenv("SQLITE_DB")
+sqlite_path = BASE_DIR / sqlite_db if sqlite_db else BASE_DIR / "test_db.sqlite3"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "test_db.sqlite3",
+        "NAME": sqlite_path,
     }
 }
 

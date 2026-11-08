@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация — Sky TBook{% endblock %}
+
+{% block content %}
+<div class="auth-card card border-0 shadow-sm">
+    <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+            <div class="display-6 text-primary mb-2"><i class="bi bi-person-plus"></i></div>
+            <h1 class="h3 mb-1">Создать аккаунт</h1>
+            <p class="text-body-secondary mb-0">Достаточно email и пароля</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                    {% if field.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-person-check me-1"></i>Зарегистрироваться
+            </button>
+        </form>
+
+        <hr class="my-4">
+        <p class="text-center mb-0 small">
+            Уже есть аккаунт? <a href="{% url 'app_web:login' %}">Войти</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     # Мои приложения.
     "app_users",
     "app_materials",
+    "app_web",
 ]
 
 # =============================================================================
@@ -83,6 +84,13 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=25),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
+
+# =============================================================================
+# АУТЕНТИФИКАЦИЯ ВЕБ-ИНТЕРФЕЙСА
+# =============================================================================
+LOGIN_URL = "app_web:login"
+LOGIN_REDIRECT_URL = "app_web:home"
+LOGOUT_REDIRECT_URL = "app_web:home"
 
 # =============================================================================
 # MIDDLEWARE
@@ -184,6 +192,9 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Учебный DRF-проект: курсы, уроки, подписки, оплаты.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # ReDoc 3.x собирается как ES-модуль и не работает через обычный <script>,
+    # который использует drf-spectacular. Фиксируем стабильную 2.x.
+    "REDOC_DIST": "https://cdn.jsdelivr.net/npm/redoc@2.5.0",
 }
 
 # =============================================================================
