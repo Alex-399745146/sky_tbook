@@ -35,12 +35,34 @@
                 <p class="text-body-secondary mb-0">
                     {{ course.description|default:"Описание курса пока не добавлено."|linebreaksbr }}
                 </p>
+                {% if can_manage %}
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <a class="btn btn-sm btn-outline-secondary"
+                           href="{% url 'app_web:course-edit' course.pk %}">
+                            <i class="bi bi-pencil-square me-1"></i>Редактировать курс
+                        </a>
+                        {% if can_delete %}
+                            <a class="btn btn-sm btn-outline-danger"
+                               href="{% url 'app_web:course-delete' course.pk %}">
+                                <i class="bi bi-trash me-1"></i>Удалить курс
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <h2 class="h4 mb-0">Уроки</h2>
-            <span class="text-body-secondary small">Видео открываются по подписке</span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-body-secondary small">Видео открываются по подписке</span>
+                {% if can_add_lesson %}
+                    <a class="btn btn-sm btn-primary"
+                       href="{% url 'app_web:lesson-create' %}?course={{ course.pk }}">
+                        <i class="bi bi-plus-lg me-1"></i>Добавить урок
+                    </a>
+                {% endif %}
+            </div>
         </div>
 
         <div class="list-group shadow-sm">
@@ -56,7 +78,7 @@
                                 </p>
                             </div>
                         </div>
-                        <div>
+                        <div class="d-flex align-items-center gap-2">
                             {% if is_subscribed or can_manage %}
                                 <a class="btn btn-sm btn-outline-primary" href="{{ lesson.video_url }}"
                                    target="_blank" rel="noopener">
@@ -66,6 +88,18 @@
                                 <span class="text-body-secondary small">
                                     <i class="bi bi-lock me-1"></i>По подписке
                                 </span>
+                            {% endif %}
+                            {% if user.is_authenticated and is_moderator or user.is_authenticated and lesson.owner_id == user.id %}
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   href="{% url 'app_web:lesson-edit' lesson.pk %}" title="Редактировать урок">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            {% endif %}
+                            {% if user.is_authenticated and not is_moderator and lesson.owner_id == user.id %}
+                                <a class="btn btn-sm btn-outline-danger"
+                                   href="{% url 'app_web:lesson-delete' lesson.pk %}" title="Удалить урок">
+                                    <i class="bi bi-trash"></i>
+                                </a>
                             {% endif %}
                         </div>
                     </div>

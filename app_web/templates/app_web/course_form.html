@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Редактировать курс{% else %}Новый курс{% endif %} — Sky TBook{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'app_web:home' %}">Курсы</a></li>
+                {% if object %}
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'app_web:course-detail' object.pk %}">{{ object.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Редактирование</li>
+                {% else %}
+                    <li class="breadcrumb-item active" aria-current="page">Новый курс</li>
+                {% endif %}
+            </ol>
+        </nav>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="h3 mb-1">{% if object %}Редактировать курс{% else %}Новый курс{% endif %}</h1>
+                <p class="text-body-secondary mb-4">
+                    {% if object %}
+                        Изменения увидят все пользователи каталога.
+                    {% else %}
+                        После создания вы сможете добавить уроки и обложку.
+                    {% endif %}
+                </p>
+
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2 me-1"></i>{% if object %}Сохранить{% else %}Создать курс{% endif %}
+                        </button>
+                        <a class="btn btn-outline-secondary"
+                           href="{% if object %}{% url 'app_web:course-detail' object.pk %}{% else %}{% url 'app_web:home' %}{% endif %}">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

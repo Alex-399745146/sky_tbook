@@ -43,7 +43,14 @@
             {% if query %}Результаты по запросу «{{ query }}»{% else %}Все доступные курсы{% endif %}
         </p>
     </div>
-    <span class="badge text-bg-primary fs-6">Курсов: {{ paginator.count }}</span>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge text-bg-primary fs-6">Курсов: {{ paginator.count }}</span>
+        {% if can_create_course %}
+            <a class="btn btn-primary" href="{% url 'app_web:course-create' %}">
+                <i class="bi bi-plus-lg me-1"></i>Создать курс
+            </a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="row g-4">

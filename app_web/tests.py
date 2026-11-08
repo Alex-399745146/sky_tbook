@@ -263,3 +263,195 @@ class TestDocsPage(BaseWebTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Swagger UI")
         self.assertContains(response, "/api/schema/redoc/")
+
+
+class TestCourseCRUD(BaseWebTestCase):
+    def test_create_course_requires_login(self):
+        response = self.client.get(reverse("app_web:course-create"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("app_web:login"), response.url)
+
+    def test_regular_user_can_create_course(self):
+        self.client.force_login(self.other)
+
+        response = self.client.post(
+            reverse("app_web:course-create"),
+            {"name": "Новый курс", "description": "Описание нового курса"},
+        )
+
+        course = Course.objects.get(name="Новый курс")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("app_web:course-detail", kwargs={"pk": course.pk}))
+        self.assertEqual(course.owner, self.other)
+
+    def test_moderator_cannot_create_course(self):
+        self.client.force_login(self.moderator)
+
+        response = self.client.get(reverse("app_web:course-create"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_owner_can_edit_course(self):
+        self.client.force_login(self.owner)
+        url = reverse("app_web:course-edit", kwargs={"pk": self.course.pk})
+
+        self.assertEqual(self.client.get(url).status_code, 200)
+        response = self.client.post(url, {"name": "Обновлённый курс", "description": "Новое описание"})
+
+        self.course.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.course.name, "Обновлённый курс")
+
+    def test_stranger_cannot_edit_course(self):
+        self.client.force_login(self.other)
+
+        response = self.client.get(reverse("app_web:course-edit", kwargs={"pk": self.course.pk}))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_moderator_can_edit_course(self):
+        self.client.force_login(self.moderator)
+
+        response = self.client.get(reverse("app_web:course-edit", kwargs={"pk": self.course.pk}))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_owner_can_delete_course(self):
+        self.client.force_login(self.owner)
+        url = reverse("app_web:course-delete", kwargs={"pk": self.course.pk})
+
+        self.assertEqual(self.client.get(url).status_code, 200)
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Course.objects.filter(pk=self.course.pk).exists())
+
+    def test_moderator_cannot_delete_course(self):
+        self.client.force_login(self.moderator)
+
+        response = self.client.post(reverse("app_web:course-delete", kwargs={"pk": self.course.pk}))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Course.objects.filter(pk=self.course.pk).exists())
+
+    def test_stranger_cannot_delete_course(self):
+        self.client.force_login(self.other)
+
+        response = self.client.post(reverse("app_web:course-delete", kwargs={"pk": self.course.pk}))
+
+        self.assertEqual(response.status_code, 403)
+
+
+class TestLessonCRUD(BaseWebTestCase):
+    def test_create_lesson_requires_login(self):
+        response = self.client.get(reverse("app_web:lesson-create"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("app_web:login"), response.url)
+
+    def test_owner_can_create_lesson(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse("app_web:lesson-create"),
+            {
+                "course": self.course.pk,
+                "name": "Новый урок",
+                "description": "Описание урока",
+                "video_url": "https://youtube.com/watch?v=456",
+            },
+        )
+
+        lesson = Lesson.objects.get(name="Новый урок")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("app_web:course-detail", kwargs={"pk": self.course.pk}))
+        self.assertEqual(lesson.owner, self.owner)
+        self.assertEqual(lesson.course, self.course)
+
+    def test_moderator_cannot_create_lesson(self):
+        self.client.force_login(self.moderator)
+
+        response = self.client.get(reverse("app_web:lesson-create"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_stranger_cannot_add_lesson_to_foreign_course(self):
+        self.client.force_login(self.other)
+
+        response = self.client.post(
+            reverse("app_web:lesson-create"),
+            {
+                "course": self.course.pk,
+                "name": "Чужой урок",
+                "video_url": "https://youtube.com/watch?v=456",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors["course"])
+        self.assertFalse(Lesson.objects.filter(name="Чужой урок").exists())
+
+    def test_owner_can_edit_lesson(self):
+        self.client.force_login(self.owner)
+        url = reverse("app_web:lesson-edit", kwargs={"pk": self.lesson.pk})
+
+        self.assertEqual(self.client.get(url).status_code, 200)
+        response = self.client.post(
+            url,
+            {
+                "course": self.course.pk,
+                "name": "Обновлённый урок",
+                "video_url": "https://youtube.com/watch?v=789",
+            },
+        )
+
+        self.lesson.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.lesson.name, "Обновлённый урок")
+
+    def test_stranger_cannot_edit_lesson(self):
+        self.client.force_login(self.other)
+
+        response = self.client.get(reverse("app_web:lesson-edit", kwargs={"pk": self.lesson.pk}))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_moderator_can_edit_lesson(self):
+        self.client.force_login(self.moderator)
+
+        response = self.client.get(reverse("app_web:lesson-edit", kwargs={"pk": self.lesson.pk}))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_owner_can_delete_lesson(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(reverse("app_web:lesson-delete", kwargs={"pk": self.lesson.pk}))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Lesson.objects.filter(pk=self.lesson.pk).exists())
+
+    def test_moderator_cannot_delete_lesson(self):
+        self.client.force_login(self.moderator)
+
+        response = self.client.post(reverse("app_web:lesson-delete", kwargs={"pk": self.lesson.pk}))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Lesson.objects.filter(pk=self.lesson.pk).exists())
+
+    def test_lesson_form_rejects_foreign_video_url(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse("app_web:lesson-create"),
+            {
+                "course": self.course.pk,
+                "name": "Плохой урок",
+                "video_url": "https://vimeo.com/123",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors["video_url"])
+        self.assertFalse(Lesson.objects.filter(name="Плохой урок").exists())

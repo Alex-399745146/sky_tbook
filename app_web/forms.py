@@ -5,6 +5,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError as DRFValidationError
+
+from app_materials.models import Course, Lesson
+from app_materials.validators import validate_video_url
+from app_users.permissions import is_moderator
 
 User = get_user_model()
 
@@ -88,3 +93,53 @@ class ProfileForm(BootstrapFormMixin, forms.ModelForm):
         model = User
         fields = ("email", "phone", "city", "avatar")
         labels = {"email": "Email", "phone": "Телефон", "city": "Город", "avatar": "Аватар"}
+
+
+class CourseForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = ("name", "description", "preview")
+        labels = {"name": "Название", "description": "Описание", "preview": "Обложка"}
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "Например, Django REST Framework"}),
+            "description": forms.Textarea(attrs={"rows": 5, "placeholder": "Чему посвящён курс"}),
+        }
+
+
+class LessonForm(BootstrapFormMixin, forms.ModelForm):
+    video_url = forms.CharField(
+        label="Ссылка на видео",
+        max_length=255,
+        widget=forms.URLInput(attrs={"placeholder": "https://youtube.com/watch?v=..."}),
+        help_text="Разрешены YouTube и Rutube.",
+    )
+
+    class Meta:
+        model = Lesson
+        fields = ("course", "name", "description", "preview", "video_url")
+        labels = {
+            "course": "Курс",
+            "name": "Название",
+            "description": "Описание",
+            "preview": "Обложка",
+            "video_url": "Ссылка на видео",
+        }
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "Например, Введение в DRF"}),
+            "description": forms.Textarea(attrs={"rows": 4, "placeholder": "О чём урок"}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        queryset = Course.objects.order_by("name")
+        if user is not None and not is_moderator(user):
+            queryset = queryset.filter(owner=user)
+        self.fields["course"].queryset = queryset
+        self.fields["course"].empty_label = "Выберите курс"
+
+    def clean_video_url(self):
+        value = self.cleaned_data["video_url"]
+        try:
+            return validate_video_url(value)
+        except DRFValidationError as error:
+            raise ValidationError(error.detail)
