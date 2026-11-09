@@ -1,7 +1,7 @@
 # 📚 Sky TBook
 
-[![CI](https://github.com/Alex-399745146/sky_tbook/actions/workflows/ci.yaml/badge.svg?branch=develop)](https://github.com/Alex-399745146/sky_tbook/actions/workflows/ci.yaml)
-[![codecov](https://codecov.io/gh/Alex-399745146/sky_tbook/branch/develop/graph/badge.svg)](https://codecov.io/gh/Alex-399745146/sky_tbook)
+[![CI](https://github.com/Alex-399745146/sky_tbook/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/Alex-399745146/sky_tbook/actions/workflows/ci.yaml)
+[![codecov](https://codecov.io/gh/Alex-399745146/sky_tbook/branch/main/graph/badge.svg)](https://codecov.io/gh/Alex-399745146/sky_tbook)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
 ![Django](https://img.shields.io/badge/django-4.2-092E20)
 ![DRF](https://img.shields.io/badge/DRF-3.17-A30000)
